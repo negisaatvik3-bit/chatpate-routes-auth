@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 
-export function AuthBrand({ suffix }: { suffix?: string }) {
+export function AuthBrand({ suffix }: { suffix?: string | undefined }) {
   return (
     <div className="flex w-full items-center justify-center gap-2 lg:justify-start">
       <Link to="/login" className="text-lg font-extrabold tracking-tight text-primary">

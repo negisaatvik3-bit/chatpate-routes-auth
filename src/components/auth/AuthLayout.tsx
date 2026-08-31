@@ -11,6 +11,7 @@ interface AuthLayoutProps {
   distance?: string;
   distanceNote?: string;
   trail?: string;
+  image?: string;
 }
 
 export function AuthLayout({
@@ -22,6 +23,7 @@ export function AuthLayout({
   distance = "1.2 km",
   distanceNote = "left to your basecamp",
   trail = "Hampta Pass Trail",
+  image,
 }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-5">
@@ -34,6 +36,7 @@ export function AuthLayout({
 
         <div className="hidden p-3 lg:block lg:w-[60%]">
           <AuthImagePanel
+            image={image}
             place={place}
             region={region}
             distance={distance}

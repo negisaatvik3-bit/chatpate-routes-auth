@@ -4,6 +4,7 @@ import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthDivider } from "@/components/auth/AuthDivider";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 import { SignupForm } from "@/components/auth/SignupForm";
+import signupImage from "@/assets/signup-travel.png.asset.json";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -29,6 +30,7 @@ function SignupPage() {
 
   return (
     <AuthLayout
+      image={signupImage.url}
       footer={
         <>
           Already have an account?{" "}
@@ -47,17 +49,17 @@ function SignupPage() {
         <p className="mx-auto mt-3 max-w-xs text-sm text-muted-foreground">
           Join the Chatpate Routes community and discover experiences worth travelling for.
         </p>
-        <div className="mt-6">
-          <SocialAuthButtons onError={setSocialError} />
-        </div>
+      </div>
+      <SignupForm />
+      <AuthDivider />
+      <div className="text-center">
+        <SocialAuthButtons onError={setSocialError} />
         {socialError ? (
           <p role="alert" className="mt-2 text-xs text-destructive">
             {socialError}
           </p>
         ) : null}
-        <AuthDivider />
       </div>
-      <SignupForm />
     </AuthLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { Mountain } from "lucide-react";
-import travelImage from "@/assets/auth-travel.jpg";
+import defaultImage from "@/assets/auth-travel.jpg";
 
 interface Props {
   place: string;
@@ -7,13 +7,21 @@ interface Props {
   distance: string;
   distanceNote: string;
   trail: string;
+  image?: string;
 }
 
-export function AuthImagePanel({ place, region, distance, distanceNote, trail }: Props) {
+export function AuthImagePanel({
+  place,
+  region,
+  distance,
+  distanceNote,
+  trail,
+  image = defaultImage,
+}: Props) {
   return (
     <div className="relative h-full w-full overflow-hidden rounded-3xl">
       <img
-        src={travelImage}
+        src={image}
         alt="Trekkers overlooking a Himalayan valley at golden hour"
         width={1024}
         height={1440}

@@ -24,17 +24,11 @@ export const Route = createFileRoute("/admin/login")({
 function AdminLoginPage() {
   return (
     <AuthLayout
-      brandSuffix="Admin Portal"
       place="Operations Hub"
       region="Chatpate Routes"
       distance="24 trips"
       distanceNote="running this season"
       trail="Internal access"
-      footer={
-        <span className="text-xs text-muted-foreground">
-          Access is granted by the Chatpate Routes team.
-        </span>
-      }
     >
       <div className="text-center">
         <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground">

@@ -25,8 +25,11 @@ function AdminLoginPage() {
   return (
     <AuthLayout
       brandSuffix="Admin Portal"
-      imageTitle="Operations"
-      imageCaption="Chatpate Routes internal access"
+      place="Operations Hub"
+      region="Chatpate Routes"
+      distance="24 trips"
+      distanceNote="running this season"
+      trail="Internal access"
       footer={
         <span className="text-xs text-muted-foreground">
           Access is granted by the Chatpate Routes team.

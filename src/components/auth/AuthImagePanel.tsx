@@ -7,7 +7,7 @@ interface Props {
   distance: string;
   distanceNote: string;
   trail: string;
-  image?: string;
+  image?: string | undefined;
 }
 
 export function AuthImagePanel({

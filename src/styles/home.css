@@ -110,6 +110,7 @@ font-weight:600;
     url("https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=85")
     center center / cover no-repeat;
 
+  filter: blur(1.5px);
   transform: scale(1.02);
 
   z-index: 0;

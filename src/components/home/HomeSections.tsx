@@ -22,7 +22,16 @@ export function HeroSection() {
 
           <div className="search-divider" />
 
-          <div className="search-field date-field">
+          <div
+            className="search-field date-field"
+            onClick={() => {
+              const el = document.getElementById("dateInput") as
+                | (HTMLInputElement & { showPicker?: () => void })
+                | null;
+              if (el?.showPicker) el.showPicker();
+              else el?.focus();
+            }}
+          >
             <label htmlFor="dateInput">When</label>
             <input type="date" id="dateInput" />
           </div>

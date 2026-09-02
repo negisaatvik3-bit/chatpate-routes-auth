@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as ApiBookingRouteImport } from './routes/api/booking'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBookingRoute = ApiBookingRouteImport.update({
+  id: '/api/booking',
+  path: '/api/booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/signup': typeof SignupRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/admin/login'
+  fullPaths: '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/admin/login'
-  id: '__root__' | '/' | '/login' | '/signup' | '/admin/login'
+  to: '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
+  id: '__root__' | '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   SignupRoute: typeof SignupRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  ApiBookingRoute: typeof ApiBookingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/booking': {
+      id: '/api/booking'
+      path: '/api/booking'
+      fullPath: '/api/booking'
+      preLoaderRoute: typeof ApiBookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   SignupRoute: SignupRoute,
   AdminLoginRoute: AdminLoginRoute,
+  ApiBookingRoute: ApiBookingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

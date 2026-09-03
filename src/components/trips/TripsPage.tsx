@@ -5,6 +5,7 @@ import rishikesh from "@/assets/rishikesh.png";
 import jim from "@/assets/jim.png";
 import udaipur from "@/assets/udaipur.png";
 import communityImage from "@/assets/03.jpg";
+import tripHero from "@/assets/trip.png";
 import { TripsNav } from "./TripsNav";
 import "./trips.css";
 
@@ -198,7 +199,7 @@ export function TripsPage() {
     <div className="trips-page">
       <TripsNav />
 
-      <section className="trips-hero">
+      <section className="trips-hero" style={{ backgroundImage: `url(${tripHero})`, backgroundPosition: "center 50%",}}>
         <div className="trips-hero-inner trips-reveal-visible">
           <div className="trips-hero-eyebrow">Curated escapes · Real experiences</div>
           <h1>Find your next escape.</h1>

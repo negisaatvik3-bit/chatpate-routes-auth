@@ -18,6 +18,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TripDetailRouteImport } from './routes/trip-detail'
 import { Route as TripsRouteImport } from './routes/trips'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as ApiBookingRouteImport } from './routes/api/booking'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -64,6 +65,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBookingRoute = ApiBookingRouteImport.update({
+  id: '/api/booking',
+  path: '/api/booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +81,7 @@ export interface FileRoutesByFullPath {
   '/trip-detail': typeof TripDetailRoute
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByTo {
   '/trip-detail': typeof TripDetailRoute
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,41 +106,42 @@ export interface FileRoutesById {
   '/trip-detail': typeof TripDetailRoute
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/booking'
-    | '/login'
-    | '/privacy-policy'
-    | '/signup'
-    | '/terms'
-    | '/trip-detail'
-    | '/trips'
-    | '/admin/login'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/booking'
-    | '/login'
-    | '/privacy-policy'
-    | '/signup'
-    | '/terms'
-    | '/trip-detail'
-    | '/trips'
-    | '/admin/login'
-  id:
-    | '__root__'
-    | '/'
-    | '/booking'
-    | '/login'
-    | '/privacy-policy'
-    | '/signup'
-    | '/terms'
-    | '/trip-detail'
-    | '/trips'
-    | '/admin/login'
+fullPaths:
+  | '/'
+  | '/booking'
+  | '/login'
+  | '/privacy-policy'
+  | '/signup'
+  | '/terms'
+  | '/trip-detail'
+  | '/trips'
+  | '/admin/login'
+fileRoutesByTo: FileRoutesByTo
+to:
+  | '/'
+  | '/booking'
+  | '/login'
+  | '/privacy-policy'
+  | '/signup'
+  | '/terms'
+  | '/trip-detail'
+  | '/trips'
+  | '/admin/login'
+id:
+  | '__root__'
+  | '/'
+  | '/booking'
+  | '/login'
+  | '/privacy-policy'
+  | '/signup'
+  | '/terms'
+  | '/trip-detail'
+  | '/trips'
+  | '/admin/login'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +154,7 @@ export interface RootRouteChildren {
   TripDetailRoute: typeof TripDetailRoute
   TripsRoute: typeof TripsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  ApiBookingRoute: typeof ApiBookingRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +222,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/booking': {
+      id: '/api/booking'
+      path: '/api/booking'
+      fullPath: '/api/booking'
+      preLoaderRoute: typeof ApiBookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   TripDetailRoute: TripDetailRoute,
   TripsRoute: TripsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  ApiBookingRoute: ApiBookingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -26,7 +26,7 @@ export const homeImages = {
   rishikesh: rishikeshImage,
   jim: jimImage,
   udaipur: udaipurImage,
-  
+
   route: birRouteImage,
   food: foodImage,
   people: peopleImage,

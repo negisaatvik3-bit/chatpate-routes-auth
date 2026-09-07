@@ -401,7 +401,7 @@ export function SiteFooter() {
         <div className="footer-links">
           <div className="footer-link-group">
             <span>Explore</span>
-            <a href="#trips">Trips</a>
+            <a href="/trips">Trips</a>
             <a href="#community">Community</a>
             <a href="#meetups">Meetups</a>
             <a href="#about">About</a>

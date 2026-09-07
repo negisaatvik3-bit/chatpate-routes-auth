@@ -3324,6 +3324,79 @@ display:none;
 
 }
 
+/* TRIPS PAGE */
+
+.trips-page-hero {
+  position: relative;
+  min-height: 500px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  padding: 150px 6% 80px;
+  background-color: #111;
+  background-position: center;
+  background-size: cover;
+  color: #fff;
+}
+
+.trips-page-hero::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.62));
+  content: "";
+}
+
+.trips-page-hero-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.trips-page-eyebrow {
+  margin-bottom: 15px;
+  color: #a5f2fc;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+.trips-page-hero h1 {
+  max-width: 850px;
+  font-size: clamp(54px, 7vw, 92px);
+  font-weight: 500;
+  letter-spacing: -4px;
+  line-height: 0.93;
+}
+
+.trips-page-hero-content > p:last-child {
+  max-width: 520px;
+  margin-top: 25px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.trips-page-main {
+  background: #fff;
+}
+
+.trips-page-main .trips {
+  padding-top: 100px;
+}
+
+@media (max-width: 650px) {
+  .trips-page-hero {
+    min-height: 480px;
+    padding: 130px 5% 65px;
+  }
+
+  .trips-page-hero h1 {
+    letter-spacing: -3px;
+  }
+}
+
 /* BOOKING DIALOG */
 
 body.booking-open {

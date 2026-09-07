@@ -1,6 +1,10 @@
 import { homeImages } from "./images";
 
-export function HeroSection() {
+export function HeroSection({
+  onFindTrip,
+}: {
+  onFindTrip: (destination: string, travelDate: string) => void;
+}) {
   return (
     <header className="hero">
       <div className="hero-content">
@@ -13,11 +17,7 @@ export function HeroSection() {
         <div className="hero-search active">
           <div className="search-field">
             <label htmlFor="destinationInput">Destination</label>
-            <input
-              type="text"
-              id="destinationInput"
-              placeholder="Where do you want to go?"
-            />
+            <input type="text" id="destinationInput" placeholder="Where do you want to go?" />
           </div>
 
           <div className="search-divider" />
@@ -26,8 +26,7 @@ export function HeroSection() {
             className="search-field date-field"
             onClick={() => {
               const el = document.getElementById("dateInput") as
-                | (HTMLInputElement & { showPicker?: () => void })
-                | null;
+                (HTMLInputElement & { showPicker?: () => void }) | null;
               if (el?.showPicker) el.showPicker();
               else el?.focus();
             }}
@@ -36,7 +35,16 @@ export function HeroSection() {
             <input type="date" id="dateInput" />
           </div>
 
-          <button className="search-submit" type="button">
+          <button
+            className="search-submit"
+            type="button"
+            onClick={() => {
+              const destination = (document.getElementById("destinationInput") as HTMLInputElement)
+                .value;
+              const travelDate = (document.getElementById("dateInput") as HTMLInputElement).value;
+              onFindTrip(destination, travelDate);
+            }}
+          >
             Find My Trip
           </button>
         </div>
@@ -116,10 +124,7 @@ export function WhySection() {
 
       <div className="postcard-grid">
         {postcards.map((card) => (
-          <article
-            className={`stamp${card.reverse ? " reverse" : ""}`}
-            key={card.number}
-          >
+          <article className={`stamp${card.reverse ? " reverse" : ""}`} key={card.number}>
             <div className="card-content">
               {card.reverse ? (
                 <>
@@ -176,18 +181,16 @@ export function FounderSection() {
 
           <div className="founder-letter">
             <p>
-              I started Chatpate Routes because I’ve always felt that travelling should
-              be a little less predictable. Not just visiting the usual places, following
-              a fixed itinerary and coming back with the same pictures everyone has.
+              I started Chatpate Routes because I’ve always felt that travelling should be a little
+              less predictable. Not just visiting the usual places, following a fixed itinerary and
+              coming back with the same pictures everyone has.
             </p>
             <p>
-              I wanted to create trips where you discover a random little place, eat
-              something ridiculously good, take the longer route just because, and meet
-              people who were strangers when the trip began.
+              I wanted to create trips where you discover a random little place, eat something
+              ridiculously good, take the longer route just because, and meet people who were
+              strangers when the trip began.
             </p>
-            <p>
-              Basically, travel with a little more curiosity, chaos and chatpata-neess.
-            </p>
+            <p>Basically, travel with a little more curiosity, chaos and chatpata-neess.</p>
           </div>
 
           <div className="founder-signature">
@@ -300,8 +303,8 @@ export function MeetupsSection() {
           </div>
 
           <p className="meetups-intro">
-            Delhi meetups for people who'd rather talk about their next escape than their
-            Monday plans.
+            Delhi meetups for people who'd rather talk about their next escape than their Monday
+            plans.
           </p>
         </div>
 
@@ -325,8 +328,8 @@ export function MeetupsSection() {
             </h3>
 
             <p>
-              A casual evening to meet fellow Chatpate people, swap travel stories,
-              discover new places, and maybe end up planning the next trip together.
+              A casual evening to meet fellow Chatpate people, swap travel stories, discover new
+              places, and maybe end up planning the next trip together.
             </p>
 
             <div className="meetup-details">

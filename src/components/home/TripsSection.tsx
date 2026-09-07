@@ -49,36 +49,35 @@ const trips = [
   },
 ];
 
+export type Trip = (typeof trips)[number];
+
 function cardsPerView(width: number) {
   if (width <= 650) return 1;
   if (width <= 900) return 2;
   return 3;
 }
 
-export function TripsSection() {
+export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => void }) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
   const [offset, setOffset] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const update = useCallback(
-    (nextPage: number) => {
-      const grid = gridRef.current;
-      if (!grid) return;
-      const perView = cardsPerView(window.innerWidth);
-      const pages = Math.max(0, Math.ceil(trips.length / perView) - 1);
-      const card = grid.querySelector(".trip-card");
-      const width = card ? card.getBoundingClientRect().width : 0;
-      const styles = window.getComputedStyle(grid);
-      const gap = parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
-      const clamped = Math.min(Math.max(nextPage, 0), pages);
+  const update = useCallback((nextPage: number) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const perView = cardsPerView(window.innerWidth);
+    const pages = Math.max(0, Math.ceil(trips.length / perView) - 1);
+    const card = grid.querySelector(".trip-card");
+    const width = card ? card.getBoundingClientRect().width : 0;
+    const styles = window.getComputedStyle(grid);
+    const gap = parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
+    const clamped = Math.min(Math.max(nextPage, 0), pages);
 
-      setTotalPages(pages);
-      setPage(clamped);
-      setOffset(clamped * perView * (width + gap));
-    },
-    [],
-  );
+    setTotalPages(pages);
+    setPage(clamped);
+    setOffset(clamped * perView * (width + gap));
+  }, []);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => update(0));
@@ -122,11 +121,7 @@ export function TripsSection() {
       </div>
 
       <div className="trip-slider">
-        <div
-          className="trip-grid"
-          ref={gridRef}
-          style={{ transform: `translateX(-${offset}px)` }}
-        >
+        <div className="trip-grid" ref={gridRef} style={{ transform: `translateX(-${offset}px)` }}>
           {trips.map((trip) => (
             <article className="trip-card" key={trip.title}>
               <div className="trip-image">
@@ -151,9 +146,13 @@ export function TripsSection() {
                   </div>
 
                   <div className="trip-bottom">
-                    <a href="#trips" className="view-details">
+                    <button
+                      type="button"
+                      className="view-details"
+                      onClick={() => onSelectTrip(trip)}
+                    >
                       Explore
-                    </a>
+                    </button>
                     <div className="trip-price">
                       <span>From</span>
                       <strong>{trip.price}</strong>

@@ -1,19 +1,9 @@
-import { Resend } from "resend";
+import { getServerEnv, requireServerEnv } from "../server-env";
 
-const resendApiKey = "re_2xxV35CV_9sMuZrwdd5cfxjnmo8hPwK9k";
-const notificationEmail = "Chatpateroutes@gmail.com";
-
-if (!resendApiKey) {
-  throw new Error("Missing RESEND_API_KEY");
-}
-
-if (!notificationEmail) {
-  throw new Error("Missing BOOKING_NOTIFICATION_EMAIL");
-}
-
-const resend = new Resend(resendApiKey);
+const RESEND_API_URL = "https://api.resend.com/emails";
 
 export interface BookingEmailData {
+  bookingId: string;
   name: string;
   email: string;
   phone: string;
@@ -23,28 +13,61 @@ export interface BookingEmailData {
   message?: string;
 }
 
-export async function sendBookingNotificationEmail(
-  booking: BookingEmailData,
-): Promise<void> {
-  const { error } = await resend.emails.send({
-    from: "Chatpate Routes <onboarding@resend.dev>",
-    to: [notificationEmail],
-    subject: `New Booking - ${booking.trip}`,
-    html: `
-      <h2>New Booking Received</h2>
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>'"]/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[character] ?? character,
+  );
+}
 
-      <p><strong>Name:</strong> ${booking.name}</p>
-      <p><strong>Email:</strong> ${booking.email}</p>
-      <p><strong>Phone:</strong> ${booking.phone}</p>
-      <p><strong>Trip:</strong> ${booking.trip}</p>
-      <p><strong>Travel Date:</strong> ${booking.travelDate}</p>
-      <p><strong>Travellers:</strong> ${booking.travellers}</p>
-      <p><strong>Message:</strong> ${booking.message ?? "No message"}</p>
-    `,
+export async function sendBookingNotificationEmail(booking: BookingEmailData): Promise<void> {
+  const apiKey = requireServerEnv("RESEND_API_KEY");
+  const notificationEmail = requireServerEnv("BOOKING_NOTIFICATION_EMAIL");
+  const from = getServerEnv("RESEND_FROM_EMAIL") ?? "Chatpate Routes <onboarding@resend.dev>";
+  const safe = {
+    bookingId: escapeHtml(booking.bookingId),
+    name: escapeHtml(booking.name),
+    email: escapeHtml(booking.email),
+    phone: escapeHtml(booking.phone),
+    trip: escapeHtml(booking.trip),
+    travelDate: escapeHtml(booking.travelDate),
+    travellers: String(booking.travellers),
+    message: escapeHtml(booking.message ?? "No message").replace(/\n/g, "<br />"),
+  };
+  const subjectTrip = booking.trip.replace(/[\r\n]+/g, " ").trim();
+  const response = await fetch(RESEND_API_URL, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${apiKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: [notificationEmail],
+      subject: `New Booking - ${subjectTrip}`,
+      html: `
+        <h2>New Booking Received</h2>
+        <p><strong>Booking ID:</strong> ${safe.bookingId}</p>
+        <p><strong>Name:</strong> ${safe.name}</p>
+        <p><strong>Email:</strong> ${safe.email}</p>
+        <p><strong>Phone:</strong> ${safe.phone}</p>
+        <p><strong>Trip:</strong> ${safe.trip}</p>
+        <p><strong>Travel Date:</strong> ${safe.travelDate}</p>
+        <p><strong>Travellers:</strong> ${safe.travellers}</p>
+        <p><strong>Message:</strong> ${safe.message}</p>
+      `,
+    }),
   });
 
- if (error) {
-  console.error("RESEND FULL ERROR:", JSON.stringify(error, null, 2));
-  throw new Error(error.message);
- }
+  if (!response.ok) {
+    const details = await response.text();
+    throw new Error(`Resend request failed with status ${response.status}: ${details}`);
+  }
 }

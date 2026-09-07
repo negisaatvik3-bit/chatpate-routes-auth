@@ -6,7 +6,15 @@ export function HeroSection({
   onFindTrip: (destination: string, travelDate: string) => void;
 }) {
   return (
-    <header className="hero">
+      <header
+        className="hero"
+        style={{
+          backgroundImage: `url(${homeImages.hero})`,
+          backgroundPosition: "center center",
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
       <div className="hero-content">
         <h1 className="hero-title">So, where are we going?</h1>
 
@@ -423,9 +431,9 @@ export function SiteFooter() {
 
           <div className="footer-link-group">
             <span>Legal</span>
-            <a href="#contact">Privacy Policy</a>
-            <a href="#contact">Terms &amp; Conditions</a>
-            <a href="#contact">Returns &amp; Refunds</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms &amp; Conditions</a>
+            <a href="/returns-refunds">Returns &amp; Refunds</a>
           </div>
         </div>
       </div>

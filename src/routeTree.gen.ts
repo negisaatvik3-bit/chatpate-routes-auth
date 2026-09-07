@@ -10,8 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BookingRouteImport } from './routes/booking'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TripDetailRouteImport } from './routes/trip-detail'
+import { Route as TripsRouteImport } from './routes/trips'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as ApiBookingRouteImport } from './routes/api/booking'
 
@@ -20,14 +25,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookingRoute = BookingRouteImport.update({
+  id: '/booking',
+  path: '/booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripDetailRoute = TripDetailRouteImport.update({
+  id: '/trip-detail',
+  path: '/trip-detail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TripsRoute = TripsRouteImport.update({
+  id: '/trips',
+  path: '/trips',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -43,38 +73,89 @@ const ApiBookingRoute = ApiBookingRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/trip-detail': typeof TripDetailRoute
+  '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/trip-detail': typeof TripDetailRoute
+  '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/booking': typeof BookingRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms': typeof TermsRoute
+  '/trip-detail': typeof TripDetailRoute
+  '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
+  fullPaths:
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
-  id: '__root__' | '/' | '/login' | '/signup' | '/admin/login' | '/api/booking'
+  to:
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
+  id:
+    | '__root__'
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BookingRoute: typeof BookingRoute
   LoginRoute: typeof LoginRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
+  TripDetailRoute: typeof TripDetailRoute
+  TripsRoute: typeof TripsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApiBookingRoute: typeof ApiBookingRoute
 }
@@ -88,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/booking': {
+      id: '/booking'
+      path: '/booking'
+      fullPath: '/booking'
+      preLoaderRoute: typeof BookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -95,11 +183,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trip-detail': {
+      id: '/trip-detail'
+      path: '/trip-detail'
+      fullPath: '/trip-detail'
+      preLoaderRoute: typeof TripDetailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trips': {
+      id: '/trips'
+      path: '/trips'
+      fullPath: '/trips'
+      preLoaderRoute: typeof TripsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
@@ -121,8 +237,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BookingRoute: BookingRoute,
   LoginRoute: LoginRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
+  TripDetailRoute: TripDetailRoute,
+  TripsRoute: TripsRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApiBookingRoute: ApiBookingRoute,
 }

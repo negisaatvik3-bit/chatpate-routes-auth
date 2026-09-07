@@ -146,13 +146,18 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
                   </div>
 
                   <div className="trip-bottom">
-                    <button
-                      type="button"
+                    <a
+                      href={trip.title === "Bir × Barot Valley 2.0" ? "/trip-detail" : "#trips"}
                       className="view-details"
-                      onClick={() => onSelectTrip(trip)}
+                      onClick={(e) => {
+                        if (trip.title !== "Bir × Barot Valley 2.0") {
+                          e.preventDefault();
+                          onSelectTrip(trip);
+                        }
+                      }}
                     >
                       Explore
-                    </button>
+                    </a>
                     <div className="trip-price">
                       <span>From</span>
                       <strong>{trip.price}</strong>

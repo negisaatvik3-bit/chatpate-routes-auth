@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { appendBookingToSheet } from "../../lib/booking/google-sheets";
 import { sendBookingNotificationEmail } from "../../lib/booking/email";
+import { ConfigurationError } from "../../lib/server-env";
 import { z } from "zod";
 const bookingSchema = z.object({
+  bookingId: z.string().uuid().optional(),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   trip: z.string().min(1, "Trip is required"),
   travelDate: z.string().min(1, "Travel date is required"),
-  travellers: z.number().int().positive("Travellers must be at least 1"),
+  travellers: z.coerce.number().int().positive("Travellers must be at least 1"),
   message: z.string().optional().default(""),
 });
 
@@ -32,16 +34,40 @@ export const Route = createFileRoute("/api/booking")({
             );
           }
 
-          const booking = result.data;
+          const booking = {
+            ...result.data,
+            bookingId: result.data.bookingId ?? crypto.randomUUID(),
+          };
 
-          console.log("Valid booking received:", booking);
+          console.log("Valid booking received:", booking.bookingId);
 
-          await appendBookingToSheet(booking);
+          const created = await appendBookingToSheet(booking);
+          if (!created) {
+            return Response.json({
+              success: true,
+              duplicate: true,
+              message: "This booking request has already been received.",
+              bookingId: booking.bookingId,
+            });
+          }
+
+          try {
             await sendBookingNotificationEmail(booking);
+          } catch (error) {
+            console.error(`Booking notification failed for ${booking.bookingId}`, error);
+            return Response.json({
+              success: true,
+              notificationSent: false,
+              message: "Booking saved. We will follow up with you shortly.",
+              bookingId: booking.bookingId,
+            });
+          }
+
           return Response.json({
             success: true,
-            message: "Booking received successfully",
-            data: booking,
+            notificationSent: true,
+            message: "Booking received successfully.",
+            bookingId: booking.bookingId,
           });
         } catch (error) {
           console.error("Booking API error:", error);
@@ -49,9 +75,12 @@ export const Route = createFileRoute("/api/booking")({
           return Response.json(
             {
               success: false,
-              message: "Invalid request",
+              message:
+                error instanceof ConfigurationError
+                  ? "Booking service is not configured."
+                  : "We could not save your booking right now.",
             },
-            { status: 400 },
+            { status: error instanceof ConfigurationError ? 503 : 500 },
           );
         }
       },

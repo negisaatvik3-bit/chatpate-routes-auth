@@ -444,3 +444,15 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Booking configuration
+
+The booking form posts to `/api/booking`. Configure these server-only values in `.env.local` for local development or as Cloudflare Worker secrets in production:
+
+- `GOOGLE_SPREADSHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_JSON` (the service-account JSON as one secret) or `GOOGLE_SERVICE_ACCOUNT_EMAIL` plus `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+- `RESEND_API_KEY`
+- `BOOKING_NOTIFICATION_EMAIL`
+- `RESEND_FROM_EMAIL` (optional; defaults to Resend's onboarding sender)
+
+The booking ID is stored in the sheet's last column and is used to make retries idempotent. Keep the existing sheet columns in place and add a `booking_id` header in column J.

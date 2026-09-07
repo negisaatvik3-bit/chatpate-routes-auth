@@ -7,7 +7,7 @@ const links = [
   { href: "#contact", label: "Contact", num: "04" },
 ];
 
-export function HomeNav() {
+export function HomeNav({ onJoinTrip }: { onJoinTrip: () => void }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,14 @@ export function HomeNav() {
             </li>
           ))}
           <li>
-            <a href="#trips" className="nav-cta">
+            <a
+              href="#trips"
+              className="nav-cta"
+              onClick={(event) => {
+                event.preventDefault();
+                onJoinTrip();
+              }}
+            >
               Join Trip
             </a>
           </li>
@@ -68,7 +75,15 @@ export function HomeNav() {
           ))}
         </div>
 
-        <a href="#trips" className="mobile-menu-cta" onClick={() => setOpen(false)}>
+        <a
+          href="#trips"
+          className="mobile-menu-cta"
+          onClick={(event) => {
+            event.preventDefault();
+            setOpen(false);
+            onJoinTrip();
+          }}
+        >
           FIND MY TRIP
         </a>
       </div>

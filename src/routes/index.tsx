@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 
 import "@/styles/home.css";
+import { BookingModal, type BookingDraft } from "@/components/home/BookingModal";
 import { HomeNav } from "@/components/home/HomeNav";
 import { TripsSection } from "@/components/home/TripsSection";
 import {
@@ -42,17 +44,21 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const [bookingDraft, setBookingDraft] = useState<BookingDraft | null>(null);
+  const closeBooking = useCallback(() => setBookingDraft(null), []);
+
   return (
     <div className="cr-home">
-      <HomeNav />
-      <HeroSection />
-      <TripsSection />
+      <HomeNav onJoinTrip={() => setBookingDraft({})} />
+      <HeroSection onFindTrip={(trip, travelDate) => setBookingDraft({ trip, travelDate })} />
+      <TripsSection onSelectTrip={(trip) => setBookingDraft({ trip: trip.title })} />
       <WhySection />
       <FounderSection />
       <ArchivesSection />
       <MeetupsSection />
       <ItinerarySection />
       <SiteFooter />
+      {bookingDraft ? <BookingModal draft={bookingDraft} onClose={closeBooking} /> : null}
     </div>
   );
 }

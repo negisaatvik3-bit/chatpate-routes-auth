@@ -18,9 +18,9 @@ export function Navbar() {
         <li>
           <a href="/#trips">Trips</a>
         </li>
-        <li>
+        {/* <li>
           <a href="/#community">Community</a>
-        </li>
+        </li> */}
         <li>
           <a href="/#about">About</a>
         </li>
@@ -55,11 +55,11 @@ export function Navbar() {
               Trips
             </a>
           </li>
-          <li>
-            <a href="/#community" onClick={closeMenu}>
+           {/* <li>
+           <a href="/#community" onClick={closeMenu}>
               Community
-            </a>
-          </li>
+            </a> 
+          </li> */}
           <li>
             <a href="/#about" onClick={closeMenu}>
               About

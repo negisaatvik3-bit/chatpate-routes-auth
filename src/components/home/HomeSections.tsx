@@ -428,9 +428,9 @@ export function SiteFooter() {
 
           <div className="footer-link-group">
             <span>Legal</span>
-            <a href="#contact">Privacy Policy</a>
-            <a href="#contact">Terms &amp; Conditions</a>
-            <a href="#contact">Returns &amp; Refunds</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms &amp; Conditions</a>
+            <a href="/returns-refunds">Returns &amp; Refunds</a>
           </div>
         </div>
       </div>

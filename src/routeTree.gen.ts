@@ -110,38 +110,41 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-fullPaths:
-  | '/'
-  | '/booking'
-  | '/login'
-  | '/privacy-policy'
-  | '/signup'
-  | '/terms'
-  | '/trip-detail'
-  | '/trips'
-  | '/admin/login'
-fileRoutesByTo: FileRoutesByTo
-to:
-  | '/'
-  | '/booking'
-  | '/login'
-  | '/privacy-policy'
-  | '/signup'
-  | '/terms'
-  | '/trip-detail'
-  | '/trips'
-  | '/admin/login'
-id:
-  | '__root__'
-  | '/'
-  | '/booking'
-  | '/login'
-  | '/privacy-policy'
-  | '/signup'
-  | '/terms'
-  | '/trip-detail'
-  | '/trips'
-  | '/admin/login'
+  fullPaths:
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
+  id:
+    | '__root__'
+    | '/'
+    | '/booking'
+    | '/login'
+    | '/privacy-policy'
+    | '/signup'
+    | '/terms'
+    | '/trip-detail'
+    | '/trips'
+    | '/admin/login'
+    | '/api/booking'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {

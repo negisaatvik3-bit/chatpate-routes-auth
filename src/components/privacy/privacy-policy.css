@@ -33,7 +33,12 @@
 .privacy-mobile-menu-links a{display:flex;align-items:center;gap:20px;padding:20px 0;border-bottom:1px solid rgba(255,255,255,.18);color:#fff;font-size:clamp(32px,9vw,52px);font-weight:400;letter-spacing:-2px}
 .privacy-mobile-menu-links a span{min-width:25px;font-size:10px;font-weight:600;letter-spacing:1px;opacity:.55}
 .privacy-mobile-menu-cta{padding:13px 20px;border-radius:30px;background:#a5f2fc;color:#111;text-align:center;font-size:15px;font-weight:700}
-.privacy-hero-banner-container{width:100%;max-width:1180px;margin:105px auto 0;padding:0 6vw}
+.privacy-hero-banner-container{
+  width:100%;
+  max-width:1180px;
+  margin:105px auto 0;
+  padding:0 6vw;
+}
 .privacy-hero-banner-img{width:100%;height:320px;object-fit:cover;border-radius:16px;display:block;border:1px solid var(--privacy-line);box-shadow:0 8px 30px rgba(0,0,0,.05)}
 .privacy-hero{width:100%;max-width:1180px;margin:0 auto;padding:35px 6vw;border-bottom:1px solid var(--privacy-line)}
 .privacy-eyebrow{color:var(--privacy-green);font-size:10px;font-weight:700;letter-spacing:1.8px;margin:0 0 12px}
@@ -55,8 +60,8 @@
 .privacy-content li{color:#3e4d50;font-size:13px;line-height:1.55;padding-left:4px;margin-bottom:4px}
 .privacy-content li::marker{color:var(--privacy-green)}
 .privacy-contact-card{display:grid;grid-template-columns:1fr 1fr;gap:15px;max-width:600px;margin:22px 0}
-.privacy-contact-card p{padding:17px;border:1px solid var(--privacy-line);background:#c5bcce;margin:0}
-.privacy-contact-card strong{display:inline-block;color:#172326;font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.privacy-contact-card p{padding:17px;border:1px solid var(--privacy-line);background:#ffffff;border-radius:8px;margin:0}
+.privacy-contact-card strong{display:inline-block;color:#172326;font-size:14px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .privacy-contact-card a{color:#172326;font-size:13px;font-weight:600}
 .privacy-contact-card a:hover{text-decoration:underline}
 .privacy-footer{width:100%;padding:18px 6vw;border-top:1px solid var(--privacy-line);display:flex;justify-content:space-between;align-items:center;gap:20px;color:#536164;font-size:9px;line-height:1.4}
@@ -104,8 +109,14 @@ body.privacy-menu-open{overflow:hidden}@media(max-width:900px){.privacy-navbar{p
 }
 
 /* Privacy Policy page background override */
-.privacy-page,
-.privacy-page header,
-.privacy-page main {
+body:has(.privacy-page) {
   background: #b9e8f7 !important;
+}
+
+.privacy-content ul {
+  list-style: disc !important;
+}
+
+.privacy-content li {
+  display: list-item !important;
 }

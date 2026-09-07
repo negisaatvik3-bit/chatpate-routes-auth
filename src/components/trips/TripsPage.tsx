@@ -8,6 +8,7 @@ import communityImage from "@/assets/03.jpg";
 import tripHero from "@/assets/trip.png";
 import { TripsNav } from "./TripsNav";
 import "./trips.css";
+import { Link } from "@tanstack/react-router";
 
 type Filter = "all" | "upcoming" | "weekend" | "backpacking" | "popular";
 type Month = "all" | "september" | "october" | "november" | "december";
@@ -125,7 +126,7 @@ const monthOptions: { value: Month; label: string }[] = [
 function TripCard({ trip, index }: { trip: Trip; index: number }) {
   return (
     <article className="trips-trip-card trips-reveal-visible" style={{ transitionDelay: `${index * 60}ms` }}>
-      <a href={trip.href} className="trips-trip-link">
+      <Link to="/trip-detail" className="trips-trip-link">
         <div className="trips-trip-image">
           <img src={trip.image} alt={trip.alt} />
           <div className="trips-trip-season">{trip.season}</div>
@@ -154,7 +155,7 @@ function TripCard({ trip, index }: { trip: Trip; index: number }) {
             </div>
           </div>
         </div>
-      </a>
+      </Link>
     </article>
   );
 }

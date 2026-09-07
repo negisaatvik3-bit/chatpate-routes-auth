@@ -151,7 +151,8 @@ export function TripsSection() {
                   </div>
 
                   <div className="trip-bottom">
-                    <a href="#trips" className="view-details">
+                    <a href={trip.title === "Bir × Barot Valley 2.0" ? "/trip-detail" : "#trips"}
+                    className="view-details">
                       Explore
                     </a>
                     <div className="trip-price">

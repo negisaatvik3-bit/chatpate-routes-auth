@@ -1,12 +1,65 @@
+import { useMemo, useState, type KeyboardEvent } from "react";
 import { homeImages } from "./images";
+import { trips, type Trip } from "./tripData";
 
 export function HeroSection({
   onFindTrip,
 }: {
   onFindTrip: (destination: string, travelDate: string) => void;
 }) {
+  const [destination, setDestination] = useState("");
+  const [travelDate, setTravelDate] = useState("");
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+
+  const suggestions = useMemo(() => {
+    const query = destination.trim().toLowerCase();
+    if (!query) return [];
+
+    return trips.filter((trip) =>
+      `${trip.title} ${trip.location}`.toLowerCase().includes(query),
+    );
+  }, [destination]);
+
+  const selectSuggestion = (trip: Trip) => {
+    setDestination(trip.title);
+    setSuggestionsOpen(false);
+    setHighlightedSuggestion(-1);
+  };
+
+  const handleDestinationKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!suggestionsOpen || suggestions.length === 0) {
+      if (event.key === "Escape") setSuggestionsOpen(false);
+      return;
+    }
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedSuggestion((current) => (current + 1) % suggestions.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedSuggestion(
+        (current) => (current <= 0 ? suggestions.length - 1 : current - 1),
+      );
+    } else if (event.key === "Enter" && highlightedSuggestion >= 0) {
+      event.preventDefault();
+      const suggestion = suggestions[highlightedSuggestion];
+      if (suggestion) selectSuggestion(suggestion);
+    } else if (event.key === "Escape") {
+      setSuggestionsOpen(false);
+    }
+  };
+
   return (
-    <header className="hero">
+    <header
+      className="hero"
+      style={{
+        backgroundImage: `url(${homeImages.hero})`,
+        backgroundPosition: "center center",
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
       <div className="hero-content">
         <h1 className="hero-title">So, where are we going?</h1>
 
@@ -15,9 +68,56 @@ export function HeroSection({
         </p>
 
         <div className="hero-search active">
-          <div className="search-field">
+          <div className="search-field destination-field">
             <label htmlFor="destinationInput">Destination</label>
-            <input type="text" id="destinationInput" placeholder="Where do you want to go?" />
+            <input
+              type="text"
+              id="destinationInput"
+              placeholder="Where do you want to go?"
+              value={destination}
+              role="combobox"
+              aria-autocomplete="list"
+              aria-expanded={suggestionsOpen && destination.trim().length > 0}
+              aria-controls="destinationSuggestions"
+              onFocus={() => {
+                if (destination.trim()) setSuggestionsOpen(true);
+              }}
+              onChange={(event) => {
+                setDestination(event.target.value);
+                setSuggestionsOpen(true);
+                setHighlightedSuggestion(-1);
+              }}
+              onKeyDown={handleDestinationKeyDown}
+            />
+
+            {suggestionsOpen && destination.trim() ? (
+              <div className="destination-suggestions" id="destinationSuggestions" role="listbox">
+                {suggestions.length > 0 ? (
+                  suggestions.map((trip, index) => (
+                    <button
+                      key={trip.title}
+                      type="button"
+                      role="option"
+                      aria-selected={highlightedSuggestion === index}
+                      className={`destination-suggestion${
+                        highlightedSuggestion === index ? " highlighted" : ""
+                      }`}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectSuggestion(trip)}
+                    >
+                      <span className="destination-suggestion-title">{trip.title}</span>
+                      <span className="destination-suggestion-meta">
+                        {trip.location} · Upcoming: {trip.dates}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <p className="destination-suggestion-empty">
+                    No scheduled trip matches yet. You can still send us an enquiry for this place.
+                  </p>
+                )}
+              </div>
+            ) : null}
           </div>
 
           <div className="search-divider" />
@@ -32,16 +132,18 @@ export function HeroSection({
             }}
           >
             <label htmlFor="dateInput">When</label>
-            <input type="date" id="dateInput" />
+            <input
+              type="date"
+              id="dateInput"
+              value={travelDate}
+              onChange={(event) => setTravelDate(event.target.value)}
+            />
           </div>
 
           <button
             className="search-submit"
             type="button"
             onClick={() => {
-              const destination = (document.getElementById("destinationInput") as HTMLInputElement)
-                .value;
-              const travelDate = (document.getElementById("dateInput") as HTMLInputElement).value;
               onFindTrip(destination, travelDate);
             }}
           >
@@ -423,9 +525,9 @@ export function SiteFooter() {
 
           <div className="footer-link-group">
             <span>Legal</span>
-            <a href="#contact">Privacy Policy</a>
-            <a href="#contact">Terms &amp; Conditions</a>
-            <a href="#contact">Returns &amp; Refunds</a>
+            <a href="/privacy-policy">Privacy Policy</a>
+            <a href="/terms">Terms &amp; Conditions</a>
+            <a href="/returns-refunds">Returns &amp; Refunds</a>
           </div>
         </div>
       </div>

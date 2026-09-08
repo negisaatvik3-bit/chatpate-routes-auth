@@ -20,6 +20,18 @@ import { Route as TripDetailRouteImport } from './routes/trip-detail'
 import { Route as TripsRouteImport } from './routes/trips'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as ApiBookingRouteImport } from './routes/api/booking'
+import { Route as ApiEnquiriesRouteImport } from './routes/api/enquiries'
+import { Route as ApiTripsRouteImport } from './routes/api/trips'
+import { Route as ApiAdminBookingsRouteImport } from './routes/api/admin/bookings'
+import { Route as ApiAdminEnquiriesRouteImport } from './routes/api/admin/enquiries'
+import { Route as ApiAdminTripsRouteImport } from './routes/api/admin/trips'
+import { Route as ApiTripsTripIdRouteImport } from './routes/api/trips/$tripId'
+import { Route as ApiAdminBookingsBookingIdRouteImport } from './routes/api/admin/bookings/$bookingId'
+import { Route as ApiAdminEnquiresEnquiryIdRouteImport } from './routes/api/admin/enquires/$enquiryId'
+import { Route as ApiTripsTripIdImagesRouteImport } from './routes/api/trips/$tripId.images'
+import { Route as ApiTripsTripIdItineraryRouteImport } from './routes/api/trips/$tripId.itinerary'
+import { Route as ApiTripsTripIdImagesImageIdRouteImport } from './routes/api/trips/$tripId.images.$imageId'
+import { Route as ApiTripsTripIdItineraryItineraryIdRouteImport } from './routes/api/trips/$tripId.itinerary.$itineraryId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +88,70 @@ const ApiBookingRoute = ApiBookingRouteImport.update({
   path: '/api/booking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiEnquiriesRoute = ApiEnquiriesRouteImport.update({
+  id: '/api/enquiries',
+  path: '/api/enquiries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsRoute = ApiTripsRouteImport.update({
+  id: '/api/trips',
+  path: '/api/trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminBookingsRoute = ApiAdminBookingsRouteImport.update({
+  id: '/api/admin/bookings',
+  path: '/api/admin/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminEnquiriesRoute = ApiAdminEnquiriesRouteImport.update({
+  id: '/api/admin/enquiries',
+  path: '/api/admin/enquiries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminTripsRoute = ApiAdminTripsRouteImport.update({
+  id: '/api/admin/trips',
+  path: '/api/admin/trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTripsTripIdRoute = ApiTripsTripIdRouteImport.update({
+  id: '/$tripId',
+  path: '/$tripId',
+  getParentRoute: () => ApiTripsRoute,
+} as any)
+const ApiAdminBookingsBookingIdRoute =
+  ApiAdminBookingsBookingIdRouteImport.update({
+    id: '/$bookingId',
+    path: '/$bookingId',
+    getParentRoute: () => ApiAdminBookingsRoute,
+  } as any)
+const ApiAdminEnquiresEnquiryIdRoute =
+  ApiAdminEnquiresEnquiryIdRouteImport.update({
+    id: '/api/admin/enquires/$enquiryId',
+    path: '/api/admin/enquires/$enquiryId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiTripsTripIdImagesRoute = ApiTripsTripIdImagesRouteImport.update({
+  id: '/images',
+  path: '/images',
+  getParentRoute: () => ApiTripsTripIdRoute,
+} as any)
+const ApiTripsTripIdItineraryRoute = ApiTripsTripIdItineraryRouteImport.update({
+  id: '/itinerary',
+  path: '/itinerary',
+  getParentRoute: () => ApiTripsTripIdRoute,
+} as any)
+const ApiTripsTripIdImagesImageIdRoute =
+  ApiTripsTripIdImagesImageIdRouteImport.update({
+    id: '/$imageId',
+    path: '/$imageId',
+    getParentRoute: () => ApiTripsTripIdImagesRoute,
+  } as any)
+const ApiTripsTripIdItineraryItineraryIdRoute =
+  ApiTripsTripIdItineraryItineraryIdRouteImport.update({
+    id: '/$itineraryId',
+    path: '/$itineraryId',
+    getParentRoute: () => ApiTripsTripIdItineraryRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -89,6 +165,18 @@ export interface FileRoutesByFullPath {
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
+  '/api/enquiries': typeof ApiEnquiriesRoute
+  '/api/trips': typeof ApiTripsRouteWithChildren
+  '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
+  '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
+  '/api/admin/trips': typeof ApiAdminTripsRoute
+  '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRoute
+  '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
+  '/api/trips/$tripId/images': typeof ApiTripsTripIdImagesRouteWithChildren
+  '/api/trips/$tripId/itinerary': typeof ApiTripsTripIdItineraryRouteWithChildren
+  '/api/trips/$tripId/images/$imageId': typeof ApiTripsTripIdImagesImageIdRoute
+  '/api/trips/$tripId/itinerary/$itineraryId': typeof ApiTripsTripIdItineraryItineraryIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -102,6 +190,18 @@ export interface FileRoutesByTo {
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
+  '/api/enquiries': typeof ApiEnquiriesRoute
+  '/api/trips': typeof ApiTripsRouteWithChildren
+  '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
+  '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
+  '/api/admin/trips': typeof ApiAdminTripsRoute
+  '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRoute
+  '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
+  '/api/trips/$tripId/images': typeof ApiTripsTripIdImagesRouteWithChildren
+  '/api/trips/$tripId/itinerary': typeof ApiTripsTripIdItineraryRouteWithChildren
+  '/api/trips/$tripId/images/$imageId': typeof ApiTripsTripIdImagesImageIdRoute
+  '/api/trips/$tripId/itinerary/$itineraryId': typeof ApiTripsTripIdItineraryItineraryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,6 +216,18 @@ export interface FileRoutesById {
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
   '/api/booking': typeof ApiBookingRoute
+  '/api/enquiries': typeof ApiEnquiriesRoute
+  '/api/trips': typeof ApiTripsRouteWithChildren
+  '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
+  '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
+  '/api/admin/trips': typeof ApiAdminTripsRoute
+  '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRoute
+  '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
+  '/api/trips/$tripId/images': typeof ApiTripsTripIdImagesRouteWithChildren
+  '/api/trips/$tripId/itinerary': typeof ApiTripsTripIdItineraryRouteWithChildren
+  '/api/trips/$tripId/images/$imageId': typeof ApiTripsTripIdImagesImageIdRoute
+  '/api/trips/$tripId/itinerary/$itineraryId': typeof ApiTripsTripIdItineraryItineraryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -131,6 +243,18 @@ export interface FileRouteTypes {
     | '/trips'
     | '/admin/login'
     | '/api/booking'
+    | '/api/enquiries'
+    | '/api/trips'
+    | '/api/admin/bookings'
+    | '/api/admin/enquiries'
+    | '/api/admin/trips'
+    | '/api/trips/$tripId'
+    | '/api/admin/bookings/$bookingId'
+    | '/api/admin/enquires/$enquiryId'
+    | '/api/trips/$tripId/images'
+    | '/api/trips/$tripId/itinerary'
+    | '/api/trips/$tripId/images/$imageId'
+    | '/api/trips/$tripId/itinerary/$itineraryId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -144,6 +268,18 @@ export interface FileRouteTypes {
     | '/trips'
     | '/admin/login'
     | '/api/booking'
+    | '/api/enquiries'
+    | '/api/trips'
+    | '/api/admin/bookings'
+    | '/api/admin/enquiries'
+    | '/api/admin/trips'
+    | '/api/trips/$tripId'
+    | '/api/admin/bookings/$bookingId'
+    | '/api/admin/enquires/$enquiryId'
+    | '/api/trips/$tripId/images'
+    | '/api/trips/$tripId/itinerary'
+    | '/api/trips/$tripId/images/$imageId'
+    | '/api/trips/$tripId/itinerary/$itineraryId'
   id:
     | '__root__'
     | '/'
@@ -157,6 +293,18 @@ export interface FileRouteTypes {
     | '/trips'
     | '/admin/login'
     | '/api/booking'
+    | '/api/enquiries'
+    | '/api/trips'
+    | '/api/admin/bookings'
+    | '/api/admin/enquiries'
+    | '/api/admin/trips'
+    | '/api/trips/$tripId'
+    | '/api/admin/bookings/$bookingId'
+    | '/api/admin/enquires/$enquiryId'
+    | '/api/trips/$tripId/images'
+    | '/api/trips/$tripId/itinerary'
+    | '/api/trips/$tripId/images/$imageId'
+    | '/api/trips/$tripId/itinerary/$itineraryId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,6 +319,12 @@ export interface RootRouteChildren {
   TripsRoute: typeof TripsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   ApiBookingRoute: typeof ApiBookingRoute
+  ApiEnquiriesRoute: typeof ApiEnquiriesRoute
+  ApiTripsRoute: typeof ApiTripsRouteWithChildren
+  ApiAdminBookingsRoute: typeof ApiAdminBookingsRouteWithChildren
+  ApiAdminEnquiriesRoute: typeof ApiAdminEnquiriesRoute
+  ApiAdminTripsRoute: typeof ApiAdminTripsRoute
+  ApiAdminEnquiresEnquiryIdRoute: typeof ApiAdminEnquiresEnquiryIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,8 +406,155 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBookingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/enquiries': {
+      id: '/api/enquiries'
+      path: '/api/enquiries'
+      fullPath: '/api/enquiries'
+      preLoaderRoute: typeof ApiEnquiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips': {
+      id: '/api/trips'
+      path: '/api/trips'
+      fullPath: '/api/trips'
+      preLoaderRoute: typeof ApiTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/bookings': {
+      id: '/api/admin/bookings'
+      path: '/api/admin/bookings'
+      fullPath: '/api/admin/bookings'
+      preLoaderRoute: typeof ApiAdminBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/enquiries': {
+      id: '/api/admin/enquiries'
+      path: '/api/admin/enquiries'
+      fullPath: '/api/admin/enquiries'
+      preLoaderRoute: typeof ApiAdminEnquiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/trips': {
+      id: '/api/admin/trips'
+      path: '/api/admin/trips'
+      fullPath: '/api/admin/trips'
+      preLoaderRoute: typeof ApiAdminTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId': {
+      id: '/api/trips/$tripId'
+      path: '/$tripId'
+      fullPath: '/api/trips/$tripId'
+      preLoaderRoute: typeof ApiTripsTripIdRouteImport
+      parentRoute: typeof ApiTripsRoute
+    }
+    '/api/admin/bookings/$bookingId': {
+      id: '/api/admin/bookings/$bookingId'
+      path: '/$bookingId'
+      fullPath: '/api/admin/bookings/$bookingId'
+      preLoaderRoute: typeof ApiAdminBookingsBookingIdRouteImport
+      parentRoute: typeof ApiAdminBookingsRoute
+    }
+    '/api/admin/enquires/$enquiryId': {
+      id: '/api/admin/enquires/$enquiryId'
+      path: '/api/admin/enquires/$enquiryId'
+      fullPath: '/api/admin/enquires/$enquiryId'
+      preLoaderRoute: typeof ApiAdminEnquiresEnquiryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trips/$tripId/images': {
+      id: '/api/trips/$tripId/images'
+      path: '/images'
+      fullPath: '/api/trips/$tripId/images'
+      preLoaderRoute: typeof ApiTripsTripIdImagesRouteImport
+      parentRoute: typeof ApiTripsTripIdRoute
+    }
+    '/api/trips/$tripId/itinerary': {
+      id: '/api/trips/$tripId/itinerary'
+      path: '/itinerary'
+      fullPath: '/api/trips/$tripId/itinerary'
+      preLoaderRoute: typeof ApiTripsTripIdItineraryRouteImport
+      parentRoute: typeof ApiTripsTripIdRoute
+    }
+    '/api/trips/$tripId/images/$imageId': {
+      id: '/api/trips/$tripId/images/$imageId'
+      path: '/$imageId'
+      fullPath: '/api/trips/$tripId/images/$imageId'
+      preLoaderRoute: typeof ApiTripsTripIdImagesImageIdRouteImport
+      parentRoute: typeof ApiTripsTripIdImagesRoute
+    }
+    '/api/trips/$tripId/itinerary/$itineraryId': {
+      id: '/api/trips/$tripId/itinerary/$itineraryId'
+      path: '/$itineraryId'
+      fullPath: '/api/trips/$tripId/itinerary/$itineraryId'
+      preLoaderRoute: typeof ApiTripsTripIdItineraryItineraryIdRouteImport
+      parentRoute: typeof ApiTripsTripIdItineraryRoute
+    }
   }
 }
+
+interface ApiTripsTripIdImagesRouteChildren {
+  ApiTripsTripIdImagesImageIdRoute: typeof ApiTripsTripIdImagesImageIdRoute
+}
+
+const ApiTripsTripIdImagesRouteChildren: ApiTripsTripIdImagesRouteChildren = {
+  ApiTripsTripIdImagesImageIdRoute: ApiTripsTripIdImagesImageIdRoute,
+}
+
+const ApiTripsTripIdImagesRouteWithChildren =
+  ApiTripsTripIdImagesRoute._addFileChildren(ApiTripsTripIdImagesRouteChildren)
+
+interface ApiTripsTripIdItineraryRouteChildren {
+  ApiTripsTripIdItineraryItineraryIdRoute: typeof ApiTripsTripIdItineraryItineraryIdRoute
+}
+
+const ApiTripsTripIdItineraryRouteChildren: ApiTripsTripIdItineraryRouteChildren =
+  {
+    ApiTripsTripIdItineraryItineraryIdRoute:
+      ApiTripsTripIdItineraryItineraryIdRoute,
+  }
+
+const ApiTripsTripIdItineraryRouteWithChildren =
+  ApiTripsTripIdItineraryRoute._addFileChildren(
+    ApiTripsTripIdItineraryRouteChildren,
+  )
+
+interface ApiTripsTripIdRouteChildren {
+  ApiTripsTripIdImagesRoute: typeof ApiTripsTripIdImagesRouteWithChildren
+  ApiTripsTripIdItineraryRoute: typeof ApiTripsTripIdItineraryRouteWithChildren
+}
+
+const ApiTripsTripIdRouteChildren: ApiTripsTripIdRouteChildren = {
+  ApiTripsTripIdImagesRoute: ApiTripsTripIdImagesRouteWithChildren,
+  ApiTripsTripIdItineraryRoute: ApiTripsTripIdItineraryRouteWithChildren,
+}
+
+const ApiTripsTripIdRouteWithChildren = ApiTripsTripIdRoute._addFileChildren(
+  ApiTripsTripIdRouteChildren,
+)
+
+interface ApiTripsRouteChildren {
+  ApiTripsTripIdRoute: typeof ApiTripsTripIdRouteWithChildren
+}
+
+const ApiTripsRouteChildren: ApiTripsRouteChildren = {
+  ApiTripsTripIdRoute: ApiTripsTripIdRouteWithChildren,
+}
+
+const ApiTripsRouteWithChildren = ApiTripsRoute._addFileChildren(
+  ApiTripsRouteChildren,
+)
+
+interface ApiAdminBookingsRouteChildren {
+  ApiAdminBookingsBookingIdRoute: typeof ApiAdminBookingsBookingIdRoute
+}
+
+const ApiAdminBookingsRouteChildren: ApiAdminBookingsRouteChildren = {
+  ApiAdminBookingsBookingIdRoute: ApiAdminBookingsBookingIdRoute,
+}
+
+const ApiAdminBookingsRouteWithChildren =
+  ApiAdminBookingsRoute._addFileChildren(ApiAdminBookingsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -267,6 +568,12 @@ const rootRouteChildren: RootRouteChildren = {
   TripsRoute: TripsRoute,
   AdminLoginRoute: AdminLoginRoute,
   ApiBookingRoute: ApiBookingRoute,
+  ApiEnquiriesRoute: ApiEnquiriesRoute,
+  ApiTripsRoute: ApiTripsRouteWithChildren,
+  ApiAdminBookingsRoute: ApiAdminBookingsRouteWithChildren,
+  ApiAdminEnquiriesRoute: ApiAdminEnquiriesRoute,
+  ApiAdminTripsRoute: ApiAdminTripsRoute,
+  ApiAdminEnquiresEnquiryIdRoute: ApiAdminEnquiresEnquiryIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

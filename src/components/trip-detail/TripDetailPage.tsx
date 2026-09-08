@@ -31,7 +31,7 @@ const sections = [
   ["packing", "What to Bring"],
   ["rules", "Rules"],
   ["faq", "FAQ"],
-];
+] as const;
 
 export function TripDetailPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);

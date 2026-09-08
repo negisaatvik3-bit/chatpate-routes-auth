@@ -82,7 +82,7 @@ export function BookingPage() {
   }, []);
 
   const trip = useMemo(
-    () => trips[tripSlug] || trips["bir-barot-valley"],
+    () => trips[tripSlug] ?? trips["bir-barot-valley"]!,
     [tripSlug],
   );
 

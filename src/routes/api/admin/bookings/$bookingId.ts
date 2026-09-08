@@ -4,7 +4,13 @@ import { z } from "zod";
 
 const updateBookingSchema = z.object({
   status: z
-    .enum(["pending", "confirmed", "cancelled", "completed"])
+    .enum([
+      "in_progress",
+      "pending",
+      "confirmed",
+      "cancelled",
+      "completed",
+    ])
     .optional(),
 
   payment_status: z
@@ -110,6 +116,10 @@ export const Route = createFileRoute("/api/admin/bookings/$bookingId")({
 
           const body = await request.json();
 
+          /*
+           * Support both normal booking updates and the
+           * manual UPI payment confirmation flow.
+           */
           const result = updateBookingSchema.safeParse(body);
 
           if (!result.success) {
@@ -133,10 +143,19 @@ export const Route = createFileRoute("/api/admin/bookings/$bookingId")({
             );
           }
 
+          /*
+           * Get the existing booking first.
+           */
           const { data: existingBooking, error: existingError } =
             await admin.supabase
               .from("bookings")
-              .select("id")
+              .select(`
+                id,
+                status,
+                payment_status,
+                number_of_people,
+                trip_id
+              `)
               .eq("id", params.bookingId)
               .single();
 
@@ -150,12 +169,35 @@ export const Route = createFileRoute("/api/admin/bookings/$bookingId")({
             );
           }
 
+          /*
+           * Payment Successful action:
+           *
+           * When the admin marks payment as paid,
+           * the booking must become confirmed.
+           *
+           * This prevents a booking from being marked
+           * as paid while remaining in_progress.
+           */
+          const updates = {
+            ...result.data,
+            updated_at: new Date().toISOString(),
+          };
+
+          if (result.data.payment_status === "paid") {
+            updates.status = "confirmed";
+          }
+
+          /*
+           * If the admin explicitly confirms the booking,
+           * make sure payment is also marked paid.
+           */
+          if (result.data.status === "confirmed") {
+            updates.payment_status = "paid";
+          }
+
           const { data: booking, error } = await admin.supabase
             .from("bookings")
-            .update({
-              ...result.data,
-              updated_at: new Date().toISOString(),
-            })
+            .update(updates)
             .eq("id", params.bookingId)
             .select(`
               *,
@@ -183,9 +225,15 @@ export const Route = createFileRoute("/api/admin/bookings/$bookingId")({
             );
           }
 
+          const paymentConfirmed =
+            booking.status === "confirmed" &&
+            booking.payment_status === "paid";
+
           return Response.json({
             success: true,
-            message: "Booking updated successfully.",
+            message: paymentConfirmed
+              ? "Payment confirmed and booking confirmed successfully."
+              : "Booking updated successfully.",
             booking,
           });
         } catch (error) {

@@ -115,6 +115,7 @@ export const Route = createFileRoute("/api/admin/bookings")({
 
           if (status) {
             const allowedStatuses = [
+              "in_progress",
               "pending",
               "confirmed",
               "cancelled",

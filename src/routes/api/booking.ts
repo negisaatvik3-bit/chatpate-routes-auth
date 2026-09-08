@@ -40,6 +40,29 @@ function getSupabaseClient(request: Request) {
   });
 }
 
+async function getAuthenticatedUser(request: Request) {
+  const authorization = request.headers.get("Authorization");
+
+  if (!authorization?.startsWith("Bearer ")) {
+    return null;
+  }
+
+  const supabase = getSupabaseClient(request);
+
+  const token = authorization.replace("Bearer ", "");
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
+
 export const Route = createFileRoute("/api/booking")({
   server: {
     handlers: {
@@ -70,18 +93,34 @@ export const Route = createFileRoute("/api/booking")({
           const supabase = getSupabaseClient(request);
 
           /*
-           * Find the requested trip.
+           * Get the authenticated user when a Supabase
+           * access token is provided.
            *
-           * The frontend may send either:
-           * - the trip UUID
-           * - the trip slug
+           * Guest bookings are still supported.
            */
-          const { data: trip, error: tripError } = await supabase
+          const user = await getAuthenticatedUser(request);
+
+          /*
+           * Find the selected published trip.
+           *
+           * The frontend can send either the trip UUID
+           * or the trip slug.
+           */
+          let tripQuery = supabase
             .from("trips")
             .select("id, title, slug, price, capacity, status")
-            .or(`id.eq.${booking.trip},slug.eq.${booking.trip}`)
-            .eq("status", "published")
-            .maybeSingle();
+            .eq("status", "published");
+
+          const isUuid = z.string().uuid().safeParse(booking.trip).success;
+
+          if (isUuid) {
+            tripQuery = tripQuery.eq("id", booking.trip);
+          } else {
+            tripQuery = tripQuery.eq("slug", booking.trip);
+          }
+
+          const { data: trip, error: tripError } =
+            await tripQuery.maybeSingle();
 
           if (tripError) {
             console.error("Trip lookup error:", tripError);
@@ -106,49 +145,55 @@ export const Route = createFileRoute("/api/booking")({
           }
 
           /*
-           * Calculate the total amount from the trip price.
-           */
-          const totalAmount =
-            trip.price !== null
-              ? Number(trip.price) * booking.travellers
-              : null;
-
-          /*
-           * Check capacity if the trip has a capacity limit.
+           * Check trip capacity.
+           *
+           * The database function only returns the number of
+           * confirmed + paid seats. It does not expose booking
+           * records to the public user.
+           *
+           * If capacity is null, the trip has no seat limit and
+           * the capacity check is skipped.
            */
           if (trip.capacity !== null) {
-            const { data: existingBookings, error: capacityError } =
-              await supabase
-                .from("bookings")
-                .select("number_of_people")
-                .eq("trip_id", trip.id)
-                .in("status", ["pending", "confirmed"]);
+            const { data: bookedSeats, error: capacityError } =
+              await supabase.rpc("get_confirmed_booked_seats", {
+                p_trip_id: trip.id,
+              });
 
             if (capacityError) {
-              console.error("Capacity check error:", capacityError);
+              console.error(
+                "Trip capacity check error:",
+                capacityError,
+              );
 
               return Response.json(
                 {
                   success: false,
-                  message: "Could not verify trip availability.",
+                  message:
+                    "Could not verify trip availability. Please try again.",
                 },
                 { status: 500 },
               );
             }
 
-            const bookedPeople =
-              existingBookings?.reduce(
-                (total, item) => total + item.number_of_people,
-                0,
-              ) ?? 0;
+            const totalBooked = Number(bookedSeats ?? 0);
+            const remainingSeats = Math.max(
+              trip.capacity - totalBooked,
+              0,
+            );
 
-            const remainingCapacity = trip.capacity - bookedPeople;
-
-            if (booking.travellers > remainingCapacity) {
+            if (booking.travellers > remainingSeats) {
               return Response.json(
                 {
                   success: false,
-                  message: `Only ${Math.max(remainingCapacity, 0)} traveller(s) are currently available for this trip.`,
+                  message:
+                    remainingSeats === 0
+                      ? "This trip is fully booked."
+                      : `Only ${remainingSeats} seat${
+                          remainingSeats === 1 ? "" : "s"
+                        } remaining for this trip.`,
+                  availableSeats: remainingSeats,
+                  requestedSeats: booking.travellers,
                 },
                 { status: 409 },
               );
@@ -156,33 +201,45 @@ export const Route = createFileRoute("/api/booking")({
           }
 
           /*
-           * Save the booking in Supabase.
+           * Calculate the booking amount.
            */
-          const { data: savedBooking, error: bookingError } = await supabase
-            .from("bookings")
-            .insert({
-              id: booking.bookingId,
-              trip_id: trip.id,
-              full_name: booking.name,
-              email: booking.email,
-              phone: booking.phone,
-              number_of_people: booking.travellers,
-              booking_date: booking.travelDate,
-              special_requests: booking.message,
-              status: "pending",
-              total_amount: totalAmount,
-              payment_status: "pending",
-            })
-            .select()
-            .single();
+          const totalAmount =
+            trip.price !== null
+              ? Number(trip.price) * booking.travellers
+              : null;
+
+          /*
+           * Save the booking.
+           *
+           * Authenticated users are linked through user_id.
+           * Guest bookings have user_id = null.
+           *
+           * New bookings start as in_progress because payment
+           * is completed manually through UPI.
+           */
+          const { data: savedBooking, error: bookingError } =
+            await supabase
+              .from("bookings")
+              .insert({
+                id: booking.bookingId,
+                user_id: user?.id ?? null,
+                trip_id: trip.id,
+                full_name: booking.name,
+                email: booking.email,
+                phone: booking.phone,
+                number_of_people: booking.travellers,
+                booking_date: booking.travelDate,
+                special_requests: booking.message,
+                status: "in_progress",
+                total_amount: totalAmount,
+                payment_status: "pending",
+              })
+              .select()
+              .single();
 
           if (bookingError) {
             console.error("Supabase booking error:", bookingError);
 
-            /*
-             * If the same booking ID already exists,
-             * treat it as a duplicate request.
-             */
             if (bookingError.code === "23505") {
               return Response.json({
                 success: true,
@@ -246,6 +303,8 @@ export const Route = createFileRoute("/api/booking")({
             notificationSent: true,
             message: "Booking received successfully.",
             bookingId: booking.bookingId,
+            status: "in_progress",
+            paymentStatus: "pending",
           });
         } catch (error) {
           console.error("Booking API error:", error);

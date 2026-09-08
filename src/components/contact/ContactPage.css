@@ -1,0 +1,311 @@
+* {
+  box-sizing: border-box;
+}
+
+.contact-page {
+  --contact-black: #111;
+  --contact-white: #fff;
+  --contact-offwhite: #e6fbff;
+  --contact-muted: #737373;
+  --contact-line: #e5e5e2;
+  --contact-blue-dark: #0072cf;
+  --contact-green: #315c45;
+
+  min-height: 100vh;
+  background: var(--contact-offwhite);
+  color: var(--contact-black);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.contact-page a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.contact-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 6%;
+  background: var(--contact-offwhite);
+}
+
+.contact-wrap {
+  width: 100%;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.contact-intro {
+  max-width: 440px;
+}
+
+.contact-kicker {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--contact-green);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.6px;
+}
+
+.contact-intro h1 {
+  margin: 0 0 22px;
+  color: var(--contact-black);
+  font-size: clamp(52px, 6vw, 78px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -4.5px;
+}
+
+.contact-intro h1 span {
+  color: var(--contact-blue-dark);
+}
+
+.contact-intro p {
+  max-width: 400px;
+  margin: 0;
+  color: var(--contact-muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.contact-options {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+.contact-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 24px;
+  border: 1px solid var(--contact-line);
+  border-radius: 17px;
+  background: #ffffff4f;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.035);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.contact-option:hover {
+  transform: translateY(-4px);
+  border-color: #d7d7d3;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+.contact-icon {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+.contact-icon svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.whatsapp .contact-icon {
+  background: #e7f8ee;
+}
+
+.whatsapp .contact-icon svg {
+  fill: #25d366;
+}
+
+.email .contact-icon {
+  background: #fdeceb;
+}
+
+.email .contact-icon svg {
+  fill: #ea4335;
+}
+
+.instagram .contact-icon {
+  background: #f9eaf1;
+}
+
+.instagram .contact-icon svg {
+  fill: none;
+  stroke: #e1306c;
+  stroke-width: 1.8;
+}
+
+.contact-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.contact-content h2 {
+  margin: 0 0 3px;
+  color: #111;
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.25px;
+}
+
+.contact-content p {
+  margin: 0;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.contact-arrow {
+  flex-shrink: 0;
+  color: #999;
+  font-size: 21px;
+  line-height: 1;
+  transition:
+    transform 0.25s ease,
+    color 0.25s ease;
+}
+
+.contact-option:hover .contact-arrow {
+  color: #111;
+  transform: translate(3px, -3px);
+}
+
+@media (max-width: 850px) {
+  .contact-section {
+    padding: 60px 6%;
+  }
+
+  .contact-wrap {
+    grid-template-columns: 1fr;
+    gap: 45px;
+    max-width: 650px;
+  }
+
+  .contact-intro {
+    max-width: 600px;
+  }
+
+  .contact-intro h1 {
+    font-size: 62px;
+  }
+}
+
+@media (max-width: 600px) {
+  .contact-section {
+    min-height: 100vh;
+    padding: 45px 18px 60px;
+  }
+
+  .contact-wrap {
+    gap: 32px;
+  }
+
+  .contact-kicker {
+    margin-bottom: 14px;
+    font-size: 9px;
+  }
+
+  .contact-intro h1 {
+    margin-bottom: 18px;
+    font-size: 49px;
+    letter-spacing: -3px;
+  }
+
+  .contact-intro p {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .contact-options {
+    gap: 10px;
+  }
+
+  .contact-option {
+    gap: 14px;
+    padding: 17px;
+    border-radius: 14px;
+  }
+
+  .contact-icon {
+    width: 45px;
+    height: 45px;
+    flex-basis: 45px;
+    border-radius: 12px;
+  }
+
+  .contact-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  .contact-content h2 {
+    font-size: 15px;
+  }
+
+  .contact-content p {
+    font-size: 10px;
+  }
+
+  .contact-arrow {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .contact-section {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .contact-intro h1 {
+    font-size: 44px;
+    letter-spacing: -2.5px;
+  }
+
+  .contact-option {
+    padding: 15px;
+    gap: 12px;
+  }
+
+  .contact-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .contact-content h2 {
+    font-size: 14px;
+  }
+
+  .contact-content p {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-page *,
+  .contact-page *::before,
+  .contact-page *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}

@@ -25,7 +25,7 @@ export function Navbar() {
           <a href="/#about">About</a>
         </li>
         <li>
-          <a href="/#contact">Contact</a>
+          <a href="/contact">Contact</a>
         </li>
         <li>
           <a href="/#trips" className="nav-cta">
@@ -66,7 +66,7 @@ export function Navbar() {
             </a>
           </li>
           <li>
-            <a href="/#contact" onClick={closeMenu}>
+            <a href="/contact" onClick={closeMenu}>
               Contact
             </a>
           </li>
@@ -80,3 +80,5 @@ export function Navbar() {
     </nav>
   );
 }
+
+export default Navbar;

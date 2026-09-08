@@ -69,6 +69,20 @@ type SavedTrip = {
   cancellationPolicy: string;
 };
 
+type AdminBooking = {
+  bookingId: string;
+  tripSlug: string;
+  travellers: number;
+  totalAmount: number;
+  advanceAmount: number;
+  paymentStatus: "Pending" | "Submitted" | "Paid" | "Failed";
+  bookingStatus:
+    | "Pending"
+    | "Confirmed"
+    | "Cancelled"
+    | "Completed";
+};
+
 const sections: { id: Section; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "itinerary", label: "Itinerary" },
@@ -85,6 +99,7 @@ export default function AdminTripEditor({
 }: AdminTripEditorProps) {
   const [activeSection, setActiveSection] =
     useState<Section>("overview");
+  const [adminBookings, setAdminBookings] = useState<AdminBooking[]>([]);
 
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
@@ -185,6 +200,35 @@ export default function AdminTripEditor({
 
   setCancellationPolicy(savedTrip.cancellationPolicy);
 }, [tripId]);
+
+useEffect(() => {
+  const loadBookings = () => {
+    try {
+      const storedBookings = JSON.parse(
+        localStorage.getItem("chatpate_routes_bookings") || "[]",
+      ) as AdminBooking[];
+
+      const tripBookings = storedBookings.filter(
+        (booking) =>
+          booking.tripSlug === tripId ||
+          booking.tripSlug === slug,
+      );
+
+      setAdminBookings(tripBookings);
+    } catch (error) {
+      console.error("Could not load bookings:", error);
+      setAdminBookings([]);
+    }
+  };
+
+  loadBookings();
+
+  window.addEventListener("storage", loadBookings);
+
+  return () => {
+    window.removeEventListener("storage", loadBookings);
+  };
+}, [tripId, slug]);
 
   const addItineraryDay = () => {
     setItinerary((current) => [
@@ -550,6 +594,26 @@ const publishTrip = () => {
   alert("Trip published successfully.");
 };
 
+const totalBookings = adminBookings.length;
+
+const pendingPayments = adminBookings.filter(
+  (booking) =>
+    booking.paymentStatus === "Pending" ||
+    booking.paymentStatus === "Submitted",
+).length;
+
+const confirmedBookings = adminBookings.filter(
+  (booking) => booking.bookingStatus === "Confirmed",
+).length;
+
+const advanceCollected = adminBookings
+  .filter((booking) => booking.paymentStatus === "Paid")
+  .reduce(
+    (total, booking) =>
+      total + Number(booking.advanceAmount || 0),
+    0,
+  );
+
   return (
     <main className="admin-trip-editor-page">
       <div className="admin-trip-editor-container">
@@ -557,31 +621,33 @@ const publishTrip = () => {
         {/* HEADER */}
 
         <header className="admin-editor-header">
-          <div>
-            <button
-              type="button"
-              className="admin-back-button"
-              onClick={() => window.history.back()}
-            >
-              ← Back to Trips
-            </button>
+  <div>
+    <div className="admin-breadcrumb-row">
+      <p className="admin-eyebrow">
+        Admin / Trips / Edit
+      </p>
 
-            <div className="admin-editor-title-row">
-              <div>
-                <p className="admin-eyebrow">
-                  Admin / Trips / Edit
-                </p>
+      <button
+        type="button"
+        className="admin-back-button"
+        onClick={() => window.history.back()}
+      >
+        ← Back to Trips
+      </button>
+    </div>
 
-                <h1>
-                  {tripName || "Create Trip"}
-                </h1>
-              </div>
+    <div className="admin-editor-title-row">
+      <div>
+        <h1>
+          {tripName || "Create Trip"}
+        </h1>
+      </div>
 
-              <span className="admin-editor-status">
-                Draft
-              </span>
-            </div>
-          </div>
+      <span className="admin-editor-status">
+        Draft
+      </span>
+    </div>
+  </div>
 
           <div className="admin-editor-actions">
             <button
@@ -610,7 +676,77 @@ const publishTrip = () => {
 
         {/* EDITOR */}
 
-        <section className="admin-editor-card">
+        {/* EDITOR */}
+
+{activeSection === "bookings" && (
+  <div className="admin-bookings-top-stats">
+    <div className="admin-booking-stat-card">
+      <div className="admin-booking-stat-content">
+        <span className="admin-booking-stat-label">
+          Total Bookings
+        </span>
+
+        <strong className="admin-booking-stat-value">
+          {totalBookings}
+        </strong>
+      </div>
+
+      <div className="admin-booking-stat-icon">
+        #
+      </div>
+    </div>
+
+    <div className="admin-booking-stat-card">
+      <div className="admin-booking-stat-content">
+        <span className="admin-booking-stat-label">
+          Pending Payments
+        </span>
+
+        <strong className="admin-booking-stat-value">
+          {pendingPayments}
+        </strong>
+      </div>
+
+      <div className="admin-booking-stat-icon">
+        ₹
+      </div>
+    </div>
+
+    <div className="admin-booking-stat-card">
+      <div className="admin-booking-stat-content">
+        <span className="admin-booking-stat-label">
+          Confirmed Bookings
+        </span>
+
+        <strong className="admin-booking-stat-value">
+          {confirmedBookings}
+        </strong>
+      </div>
+
+      <div className="admin-booking-stat-icon">
+        ✓
+      </div>
+    </div>
+
+    <div className="admin-booking-stat-card">
+      <div className="admin-booking-stat-content">
+        <span className="admin-booking-stat-label">
+          Advance Collected
+        </span>
+
+        <strong className="admin-booking-stat-value">
+          ₹{advanceCollected.toLocaleString("en-IN")}
+        </strong>
+      </div>
+
+      <div className="admin-booking-stat-icon">
+        ₹
+      </div>
+    </div>
+  </div>
+)}
+
+<section className="admin-editor-card">
 
           {/* LEFT NAVIGATION */}
 

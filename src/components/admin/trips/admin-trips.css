@@ -327,3 +327,63 @@
     flex: 1;
   }
 }
+
+/* =========================================================
+   ADMIN BRAND BLUE
+   ========================================================= */
+
+:root {
+  --admin-blue: #007ea7;
+  --admin-blue-dark: #006b8f;
+  --admin-blue-light: #eaf7fb;
+}
+
+
+/* Headers */
+.admin-trips-page h1,
+.admin-trips-page h2,
+.admin-trips-page h3,
+.admin-trips-page .admin-eyebrow {
+  color: var(--admin-blue);
+}
+
+
+/* Create Trip */
+.admin-create-button {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+.admin-create-button:hover {
+  background: var(--admin-blue-dark);
+  border-color: var(--admin-blue-dark);
+  color: #ffffff;
+}
+
+
+/* View / Edit / Publish buttons */
+.admin-action {
+  color: var(--admin-blue);
+}
+
+
+.admin-action:hover {
+  background: var(--admin-blue-light);
+  color: var(--admin-blue-dark);
+}
+
+
+/* If action buttons have a solid style */
+.admin-action.admin-action-primary {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+/* Status accents */
+.admin-status-published {
+  color: var(--admin-blue);
+}

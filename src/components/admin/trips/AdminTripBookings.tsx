@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./admin-trip-bookings.css";
 
 const BOOKINGS_STORAGE_KEY = "chatpate_routes_bookings";
@@ -15,65 +15,66 @@ type BookingStatus =
   | "Cancelled"
   | "Completed";
 
-type TripBooking = {
+type Booking = {
   bookingId: string;
   timestamp: string;
-
   trip: string;
   tripSlug: string;
   tripDate: string;
-
   name: string;
   whatsapp: string;
   email: string;
-
   travellers: number;
   travellerNames: string;
-
   pricePerPerson: number;
   totalAmount: number;
   advanceAmount: number;
-
   notes: string;
-
   paymentStatus: PaymentStatus;
   bookingStatus: BookingStatus;
-
   paymentScreenshot?: string;
   paymentScreenshotName?: string;
 };
 
-type AdminTripBookingsProps = {
+type Props = {
   tripId: string;
-  tripPrice: number;
+  tripPrice?: number;
 };
 
 function formatPrice(amount: number) {
-  return `₹${Number(amount).toLocaleString("en-IN")}`;
+  return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
 }
 
 export default function AdminTripBookings({
   tripId,
-  tripPrice,
-}: AdminTripBookingsProps) {
-  const [bookings, setBookings] = useState<TripBooking[]>([]);
-  const [selectedScreenshot, setSelectedScreenshot] =
-    useState<string | null>(null);
+  tripPrice = 8999,
+}: Props) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
     loadBookings();
+
+    const handleStorageChange = () => {
+      loadBookings();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, [tripId]);
 
   function loadBookings() {
     try {
-      const storedBookings = JSON.parse(
+      const stored = JSON.parse(
         localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
-      );
+      ) as Booking[];
 
-      const tripBookings = storedBookings.filter(
-        (booking: TripBooking) =>
+      const tripBookings = stored.filter(
+        (booking) =>
           booking.tripSlug === tripId ||
-          booking.tripSlug === "bir-barot-valley",
+          booking.trip === tripId,
       );
 
       setBookings(tripBookings);
@@ -83,76 +84,86 @@ export default function AdminTripBookings({
     }
   }
 
+  const stats = useMemo(() => {
+    const totalBookings = bookings.length;
+
+    const pendingPayments = bookings.filter(
+      (booking) =>
+        booking.paymentStatus === "Pending" ||
+        booking.paymentStatus === "Submitted",
+    ).length;
+
+    const confirmedBookings = bookings.filter(
+      (booking) => booking.bookingStatus === "Confirmed",
+    ).length;
+
+    const totalRevenue = bookings
+      .filter((booking) => booking.paymentStatus === "Paid")
+      .reduce(
+        (total, booking) => total + Number(booking.advanceAmount || 0),
+        0,
+      );
+
+    return {
+      totalBookings,
+      pendingPayments,
+      confirmedBookings,
+      totalRevenue,
+    };
+  }, [bookings]);
+
   function markPaymentSuccessful(bookingId: string) {
-    const storedBookings: TripBooking[] = JSON.parse(
-      localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
-    );
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
+      ) as Booking[];
 
-    const updatedBookings = storedBookings.map((booking) => {
-      if (booking.bookingId !== bookingId) {
-        return booking;
-      }
+      const updatedBookings = stored.map((booking) =>
+        booking.bookingId === bookingId
+          ? {
+              ...booking,
+              paymentStatus: "Paid" as PaymentStatus,
+              bookingStatus: "Confirmed" as BookingStatus,
+            }
+          : booking,
+      );
 
-      return {
-        ...booking,
-        paymentStatus: "Paid" as PaymentStatus,
-        bookingStatus: "Confirmed" as BookingStatus,
-      };
-    });
+      localStorage.setItem(
+        BOOKINGS_STORAGE_KEY,
+        JSON.stringify(updatedBookings),
+      );
 
-    localStorage.setItem(
-      BOOKINGS_STORAGE_KEY,
-      JSON.stringify(updatedBookings),
-    );
-
-    setBookings(
-      updatedBookings.filter(
-        (booking) =>
-          booking.tripSlug === tripId ||
-          booking.tripSlug === "bir-barot-valley",
-      ),
-    );
+      loadBookings();
+    } catch (error) {
+      console.error("Could not update booking:", error);
+    }
   }
 
   return (
-    <>
-      <div className="admin-bookings-header">
+    <div className="admin-bookings">
+      {/* Page heading */}
+      <div className="admin-bookings-heading">
         <div>
           <h2>Bookings</h2>
-
           <p>
-            View travellers, payment submissions and booking
-            status for this trip.
+            View travellers, payment submissions and booking status
+            for this trip.
           </p>
         </div>
-
-        <span className="admin-bookings-count">
-          {bookings.length}{" "}
-          {bookings.length === 1 ? "booking" : "bookings"}
-        </span>
       </div>
 
-      <div className="admin-bookings-info">
-        <strong>Payment verification:</strong>{" "}
-        Verify the payment with the traveller through WhatsApp,
-        then use <strong>Payment Successful</strong> to confirm
-        the booking.
-      </div>
-
-      {bookings.length === 0 ? (
-        <div className="admin-bookings-empty">
-          <div className="admin-bookings-empty-icon">
-            ✓
+      {/* TABLE */}
+      <div className="admin-bookings-table-card">
+        <div className="admin-bookings-table-header">
+          <div>
+            <h3>All Bookings</h3>
+            <span>
+              {bookings.length}{" "}
+              {bookings.length === 1 ? "booking" : "bookings"}
+            </span>
           </div>
-
-          <h3>No bookings yet</h3>
-
-          <p>
-            Bookings submitted by travellers for this trip
-            will appear here.
-          </p>
         </div>
-      ) : (
+
         <div className="admin-bookings-table-wrapper">
           <table className="admin-bookings-table">
             <thead>
@@ -164,160 +175,152 @@ export default function AdminTripBookings({
                 <th>Advance to Pay</th>
                 <th>Payment Screenshot</th>
                 <th>Payment Status</th>
-                <th>Booking Status</th>
                 <th>Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {bookings.map((booking, index) => (
-                <tr key={booking.bookingId}>
-                  {/* NUMBER */}
-                  <td>
-                    <div className="admin-booking-number">
-                      {index + 1}
-                    </div>
-                  </td>
-
-                  {/* NAME */}
-                  <td>
-                    <div className="admin-booking-name">
-                      <strong>{booking.name}</strong>
-
-                      <span>
-                        {booking.bookingId}
+              {bookings.length > 0 ? (
+                bookings.map((booking, index) => (
+                  <tr key={booking.bookingId}>
+                    <td>
+                      <span className="admin-booking-number">
+                        {index + 1}
                       </span>
+                    </td>
 
-                      {booking.travellerNames && (
-                        <small>
-                          {booking.travellerNames}
-                        </small>
+                    <td>
+                      <div className="admin-booking-person">
+                        <strong>{booking.name}</strong>
+
+                        {booking.travellerNames && (
+                          <span>
+                            {booking.travellerNames}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="admin-booking-travellers">
+                        {booking.travellers}
+                      </span>
+                    </td>
+
+                    <td>
+                      <strong>
+                        {formatPrice(
+                          booking.totalAmount ||
+                            tripPrice * booking.travellers,
+                        )}
+                      </strong>
+                    </td>
+
+                    <td>
+                      <strong className="admin-booking-advance">
+                        {formatPrice(
+                          booking.advanceAmount ||
+                            Math.round(
+                              booking.totalAmount * 0.6,
+                            ),
+                        )}
+                      </strong>
+                    </td>
+
+                    <td>
+                      {booking.paymentScreenshot ? (
+                        <a
+                          href={booking.paymentScreenshot}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="admin-payment-screenshot"
+                        >
+                          View Screenshot
+                        </a>
+                      ) : (
+                        <span className="admin-no-screenshot">
+                          Not uploaded
+                        </span>
                       )}
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* TRAVELLERS */}
-                  <td>
-                    <span className="admin-traveller-count">
-                      {booking.travellers}
-                    </span>
-                  </td>
-
-                  {/* TOTAL */}
-                  <td className="admin-booking-total">
-                    {formatPrice(booking.totalAmount)}
-                  </td>
-
-                  {/* ADVANCE */}
-                  <td className="admin-booking-advance">
-                    {formatPrice(
-                      booking.advanceAmount ||
-                        Math.round(
-                          booking.totalAmount * 0.6,
-                        ),
-                    )}
-                  </td>
-
-                  {/* SCREENSHOT */}
-                  <td>
-                    {booking.paymentScreenshot ? (
-                      <button
-                        type="button"
-                        className="admin-screenshot-button"
-                        onClick={() =>
-                          setSelectedScreenshot(
-                            booking.paymentScreenshot!,
-                          )
-                        }
+                    <td>
+                      <span
+                        className={`admin-payment-badge admin-payment-${booking.paymentStatus.toLowerCase()}`}
                       >
-                        View Screenshot
-                      </button>
-                    ) : (
-                      <span className="admin-no-screenshot">
-                        Not submitted
+                        <span className="admin-payment-dot" />
+                        {booking.paymentStatus}
                       </span>
-                    )}
-                  </td>
+                    </td>
 
-                  {/* PAYMENT STATUS */}
-                  <td>
-                    <span
-                      className={`admin-payment-status admin-payment-status-${booking.paymentStatus.toLowerCase()}`}
+                    <td>
+                      {booking.paymentStatus !== "Paid" &&
+                      booking.bookingStatus !== "Confirmed" ? (
+                        <button
+                          type="button"
+                          className="admin-payment-success"
+                          onClick={() =>
+                            markPaymentSuccessful(
+                              booking.bookingId,
+                            )
+                          }
+                        >
+                          Payment Successful
+                        </button>
+                      ) : (
+                        <span className="admin-confirmed-label">
+                          ✓ Confirmed
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <>
+                  {[1, 2, 3, 4].map((row) => (
+                    <tr
+                      key={`empty-booking-row-${row}`}
+                      className="admin-empty-booking-row"
                     >
-                      <span className="admin-payment-status-dot" />
+                      <td>
+                        <span className="admin-empty-line short" />
+                      </td>
 
-                      {booking.paymentStatus}
-                    </span>
-                  </td>
+                      <td>
+                        <span className="admin-empty-line" />
+                      </td>
 
-                  {/* BOOKING STATUS */}
-                  <td>
-                    <span
-                      className={`admin-booking-status admin-booking-status-${booking.bookingStatus.toLowerCase()}`}
-                    >
-                      {booking.bookingStatus}
-                    </span>
-                  </td>
+                      <td>
+                        <span className="admin-empty-line short" />
+                      </td>
 
-                  {/* ACTION */}
-                  <td>
-                    {booking.bookingStatus === "Confirmed" ? (
-                      <span className="admin-confirmed-label">
-                        ✓ Confirmed
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className="admin-payment-success-button"
-                        onClick={() =>
-                          markPaymentSuccessful(
-                            booking.bookingId,
-                          )
-                        }
-                      >
-                        Payment Successful
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      <td>
+                        <span className="admin-empty-line" />
+                      </td>
+
+                      <td>
+                        <span className="admin-empty-line" />
+                      </td>
+
+                      <td>
+                        <span className="admin-empty-line" />
+                      </td>
+
+                      <td>
+                        <span className="admin-empty-line medium" />
+                      </td>
+
+                      <td>
+                        <span className="admin-empty-line medium" />
+                      </td>
+                    </tr>
+                  ))}
+                </>
+              )}
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* SCREENSHOT MODAL */}
-
-      {selectedScreenshot && (
-        <div
-          className="admin-screenshot-modal"
-          onClick={() =>
-            setSelectedScreenshot(null)
-          }
-        >
-          <div
-            className="admin-screenshot-modal-content"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
-            <button
-              type="button"
-              className="admin-screenshot-close"
-              onClick={() =>
-                setSelectedScreenshot(null)
-              }
-            >
-              ×
-            </button>
-
-            <img
-              src={selectedScreenshot}
-              alt="Payment screenshot"
-            />
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

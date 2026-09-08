@@ -467,3 +467,441 @@
 .admin-primary-button:hover:not(:disabled) {
   background: #006b91;
 }
+
+/* =========================
+   BOOKINGS TOP STATS
+========================= */
+
+.admin-bookings-top-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.admin-booking-stat-card {
+  min-height: 118px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.admin-booking-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-booking-stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.admin-booking-stat-value {
+  font-size: 25px;
+  line-height: 1;
+  font-weight: 700;
+  color: #111827;
+}
+
+.admin-booking-stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   BLUE BUTTONS
+========================= */
+
+.admin-editor-actions button,
+.admin-add-button,
+.admin-remove-button,
+.admin-remove-button,
+.admin-section-nav-item,
+.admin-back-button {
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-primary-button,
+.admin-secondary-button,
+.admin-add-button {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.admin-primary-button:hover,
+.admin-secondary-button:hover,
+.admin-add-button:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+
+.admin-primary-button:disabled {
+  background: #93c5fd;
+  border-color: #93c5fd;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.admin-remove-button {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.admin-remove-button:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.admin-list-input > button {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+}
+
+.admin-list-input > button:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1100px) {
+  .admin-bookings-top-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-bookings-top-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   ADMIN BRAND BLUE
+   ========================================================= */
+
+:root {
+  --admin-blue: #007ea7;
+  --admin-blue-dark: #006b8f;
+  --admin-blue-light: #eaf7fb;
+}
+
+
+/* =========================================================
+   HEADERS
+   ========================================================= */
+
+.admin-trip-editor-page h1,
+.admin-trip-editor-page h2,
+.admin-trip-editor-page h3,
+.admin-trip-editor-page .admin-eyebrow,
+.admin-trip-editor-page .admin-sidebar-title {
+  color: var(--admin-blue);
+}
+
+
+/* Main page title */
+.admin-trip-editor-page h1 {
+  color: var(--admin-blue);
+}
+
+
+/* Section headings */
+.admin-trip-editor-page .admin-form-heading h2 {
+  color: var(--admin-blue);
+}
+
+
+/* Smaller section headings */
+.admin-trip-editor-page .admin-list-section h3,
+.admin-trip-editor-page .admin-repeatable-header h3 {
+  color: var(--admin-blue);
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.admin-section-nav-item {
+  color: var(--admin-blue);
+}
+
+.admin-section-nav-item:hover {
+  background: var(--admin-blue-light);
+  color: var(--admin-blue);
+}
+
+
+/* ACTIVE SIDEBAR ITEM */
+.admin-section-nav-item.active {
+  background: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+/* Active item's status icon */
+.admin-section-nav-item.active .admin-section-status {
+  background: #ffffff;
+  color: var(--admin-blue);
+}
+
+
+/* =========================================================
+   TOP ACTION BUTTONS
+   ========================================================= */
+
+.admin-primary-button,
+.admin-secondary-button {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+.admin-primary-button:hover,
+.admin-secondary-button:hover {
+  background: var(--admin-blue-dark);
+  border-color: var(--admin-blue-dark);
+  color: #ffffff;
+}
+
+
+.admin-primary-button:disabled {
+  background: #9bc9d8;
+  border-color: #9bc9d8;
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   ADD / REMOVE BUTTONS
+   ========================================================= */
+
+.admin-add-button {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+.admin-add-button:hover {
+  background: var(--admin-blue-dark);
+  border-color: var(--admin-blue-dark);
+  color: #ffffff;
+}
+
+
+.admin-remove-button {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+.admin-remove-button:hover {
+  background: var(--admin-blue-dark);
+  border-color: var(--admin-blue-dark);
+  color: #ffffff;
+}
+
+
+/* X buttons beside list items */
+.admin-list-input > button {
+  background: var(--admin-blue);
+  border-color: var(--admin-blue);
+  color: #ffffff;
+}
+
+
+.admin-list-input > button:hover {
+  background: var(--admin-blue-dark);
+  border-color: var(--admin-blue-dark);
+  color: #ffffff;
+}
+
+
+/* =========================================================
+   BACK BUTTON
+   ========================================================= */
+
+.admin-back-button {
+  color: var(--admin-blue);
+}
+
+
+.admin-back-button:hover {
+  color: var(--admin-blue-dark);
+}
+
+
+/* =========================================================
+   STATUS / ACCENT ELEMENTS
+   ========================================================= */
+
+.admin-editor-status {
+  color: var(--admin-blue);
+  background: var(--admin-blue-light);
+}
+
+
+.admin-counter {
+  color: var(--admin-blue);
+}
+
+
+/* =========================================================
+   BOOKING STAT ICONS
+   ========================================================= */
+
+.admin-booking-stat-icon {
+  color: var(--admin-blue);
+}
+
+/* =========================================================
+   BREADCRUMB + BACK BUTTON
+   ========================================================= */
+
+.admin-breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.admin-breadcrumb-row .admin-eyebrow {
+  margin: 0;
+}
+
+.admin-breadcrumb-row .admin-back-button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: #007ea7;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-breadcrumb-row .admin-back-button:hover {
+  color: #006b8f;
+}
+
+/* =========================================================
+   SIDEBAR BRAND BLUE
+   ========================================================= */
+
+.admin-section-nav-item.active {
+  background: #007ea7 !important;
+  color: #ffffff !important;
+  border-color: #007ea7 !important;
+}
+
+.admin-section-nav-item.active span {
+  color: #ffffff;
+}
+
+.admin-section-nav-item.active .admin-section-status {
+  background: #ffffff;
+  color: #007ea7;
+}
+
+/* =========================================================
+   ALL ADMIN ACTION BUTTONS
+   ========================================================= */
+
+.admin-editor-actions .admin-secondary-button,
+.admin-editor-actions .admin-primary-button {
+  background: #007ea7 !important;
+  border-color: #007ea7 !important;
+  color: #ffffff !important;
+}
+
+.admin-editor-actions .admin-secondary-button:hover,
+.admin-editor-actions .admin-primary-button:hover {
+  background: #006b8f !important;
+  border-color: #006b8f !important;
+}
+
+
+/* Add buttons */
+.admin-add-button {
+  background: #007ea7 !important;
+  border-color: #007ea7 !important;
+  color: #ffffff !important;
+}
+
+.admin-add-button:hover {
+  background: #006b8f !important;
+  border-color: #006b8f !important;
+}
+
+
+/* Remove buttons */
+.admin-remove-button {
+  background: #007ea7 !important;
+  border-color: #007ea7 !important;
+  color: #ffffff !important;
+}
+
+.admin-remove-button:hover {
+  background: #006b8f !important;
+  border-color: #006b8f !important;
+}
+
+
+/* List X buttons */
+.admin-list-input > button {
+  background: #007ea7 !important;
+  border-color: #007ea7 !important;
+  color: #ffffff !important;
+}
+
+.admin-list-input > button:hover {
+  background: #006b8f !important;
+  border-color: #006b8f !important;
+}
+
+/* =========================================================
+   ADMIN HEADINGS
+   ========================================================= */
+
+.admin-trip-editor-page h1,
+.admin-trip-editor-page .admin-form-heading h2,
+.admin-trip-editor-page .admin-list-section h3,
+.admin-trip-editor-page .admin-repeatable-header h3 {
+  color: #007ea7 !important;
+}
+
+.admin-bookings h2,
+.admin-bookings h3 {
+  color: #007ea7 !important;
+}
+
+.admin-bookings-table th {
+  color: #007ea7 !important;
+}

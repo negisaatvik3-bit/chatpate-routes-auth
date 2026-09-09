@@ -1,73 +1,66 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import "./booking.css";
 import QRCode from "../common/QRCode";
 
-import birBarotImage from "@/assets/bir-copy.png";
-
-const GOOGLE_SHEETS_URL =
-  "https://script.google.com/macros/s/AKfycbwyv3rXTOjUEhY6vr_6h_W-yq72nBcKPUt_yeYNvuEY8cU9L3mYyfQCKsK7OdaMXGSx/exec";
-
 const WHATSAPP_NUMBER = "919266770149";
 
-const BOOKINGS_STORAGE_KEY = "chatpate_routes_bookings";
-
-type Trip = {
+type BackendTrip = {
+  id: string;
   title: string;
-  dates: string;
-  duration: string;
-  location: string;
-  availability: string;
-  price: number;
-  image: string;
-};
-
-const trips: Record<string, Trip> = {
-  "bir-barot-valley": {
-    title: "Bir × Barot Valley 2.0",
-    dates: "4–6 September 2026",
-    duration: "3 Days · 2 Nights",
-    location: "Himachal Pradesh",
-    availability: "10 spots left",
-    price: 8999,
-    image: birBarotImage,
-  },
+  slug: string;
+  price: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  duration_days: number | null;
+  destination: string | null;
+  capacity: number | null;
+  cover_image_url: string | null;
 };
 
 function formatPrice(amount: number) {
   return `₹${Number(amount).toLocaleString("en-IN")}`;
 }
 
-function generateBookingID() {
-  const now = new Date();
+function formatDate(date: string | null) {
+  if (!date) return "Dates to be announced";
 
-  const date =
-    now.getFullYear().toString() +
-    String(now.getMonth() + 1).padStart(2, "0") +
-    String(now.getDate()).padStart(2, "0");
-
-  const random = Math.floor(1000 + Math.random() * 9000);
-
-  return `CR-${date}-${random}`;
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-async function saveBookingToGoogleSheets(bookingData: unknown) {
-  if (!GOOGLE_SHEETS_URL) return false;
-
-  try {
-    await fetch(GOOGLE_SHEETS_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
-      body: JSON.stringify(bookingData),
-    });
-
-    return true;
-  } catch (error) {
-    console.error("Google Sheets error:", error);
-    return false;
+function formatDateRange(
+  startDate: string | null,
+  endDate: string | null,
+) {
+  if (!startDate || !endDate) {
+    return "Dates to be announced";
   }
+
+  const start = new Date(startDate).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+
+  const end = new Date(endDate).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+
+  return `${start} – ${end}`;
+}
+
+function getAvailability(
+  capacity: number | null,
+) {
+  if (capacity == null) {
+    return "Limited spots";
+  }
+
+  return `${capacity} spots available`;
 }
 
 function fileToDataUrl(file: File): Promise<string> {
@@ -78,12 +71,16 @@ function fileToDataUrl(file: File): Promise<string> {
       if (typeof reader.result === "string") {
         resolve(reader.result);
       } else {
-        reject(new Error("Could not read payment screenshot."));
+        reject(
+          new Error("Could not read payment screenshot."),
+        );
       }
     };
 
     reader.onerror = () => {
-      reject(new Error("Could not read payment screenshot."));
+      reject(
+        new Error("Could not read payment screenshot."),
+      );
     };
 
     reader.readAsDataURL(file);
@@ -91,48 +88,136 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export function BookingPage() {
-  const [tripSlug, setTripSlug] = useState("bir-barot-valley");
+  const [tripId, setTripId] = useState("");
 
-  const [travellers, setTravellers] = useState("1");
+  const [trip, setTrip] =
+    useState<BackendTrip | null>(null);
+
+  const [tripLoading, setTripLoading] =
+    useState(true);
+
+  const [tripError, setTripError] =
+    useState("");
+
+  const [travellers, setTravellers] =
+    useState("1");
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
-  const [travellerNames, setTravellerNames] = useState("");
+  const [travellerNames, setTravellerNames] =
+    useState("");
+
   const [message, setMessage] = useState("");
 
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] =
+    useState(false);
 
-  const [whatsappURL, setWhatsappURL] = useState("#");
+  const [submitted, setSubmitted] =
+    useState(false);
+
+  const [whatsappURL, setWhatsappURL] =
+    useState("#");
+
+  const [bookingID, setBookingID] =
+    useState("");
 
   const [paymentScreenshot, setPaymentScreenshot] =
     useState<File | null>(null);
 
+  /*
+   * Load the selected trip from the backend.
+   *
+   * Trip Detail sends:
+   * /booking?trip=<backend-trip-id>
+   */
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const loadTrip = async () => {
+      const params = new URLSearchParams(
+        window.location.search,
+      );
 
-    setTripSlug(params.get("trip") || "bir-barot-valley");
+      const selectedTrip =
+        params.get("trip");
+
+      if (!selectedTrip) {
+        setTripError("No trip selected.");
+        setTripLoading(false);
+        return;
+      }
+
+      try {
+        setTripLoading(true);
+        setTripError("");
+        setTripId(selectedTrip);
+
+        const response = await fetch(
+          `/api/trips/${encodeURIComponent(
+            selectedTrip,
+          )}`,
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(
+            result.message ||
+              "Failed to load trip.",
+          );
+        }
+
+        setTrip(result.trip);
+      } catch (error) {
+        console.error(
+          "Failed to load booking trip:",
+          error,
+        );
+
+        setTripError(
+          error instanceof Error
+            ? error.message
+            : "Failed to load trip.",
+        );
+      } finally {
+        setTripLoading(false);
+      }
+    };
+
+    loadTrip();
   }, []);
 
-  const trip = useMemo(
-    () => trips[tripSlug] ?? trips["bir-barot-valley"]!,
-    [tripSlug],
-  );
+  const travellerCount =
+    Number(travellers) || 1;
 
-  const travellerCount = Number(travellers) || 1;
+  const totalAmount =
+    trip?.price != null
+      ? trip.price * travellerCount
+      : 0;
 
-  const totalAmount = trip.price * travellerCount;
+  const advanceAmount =
+    Math.round(totalAmount * 0.6);
 
-  const advanceAmount = Math.round(totalAmount * 0.6);
+  const breakdown =
+    trip?.price != null
+      ? `${formatPrice(trip.price)} × ${travellerCount} ${
+          travellerCount === 1
+            ? "traveller"
+            : "travellers"
+        }`
+      : "Price unavailable";
 
-  const breakdown = `${formatPrice(trip.price)} × ${travellerCount} ${
-    travellerCount === 1 ? "traveller" : "travellers"
-  }`;
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
+    if (!trip) {
+      window.alert(
+        "Trip information is not available.",
+      );
+      return;
+    }
 
     if (
       !name.trim() ||
@@ -140,100 +225,121 @@ export function BookingPage() {
       !email.trim() ||
       !travellers
     ) {
-      window.alert("Please fill in all required details.");
+      window.alert(
+        "Please fill in all required details.",
+      );
       return;
     }
 
     if (!paymentScreenshot) {
-      window.alert("Please upload your payment screenshot.");
+      window.alert(
+        "Please upload your payment screenshot.",
+      );
+      return;
+    }
+
+    if (!tripId) {
+      window.alert(
+        "No trip was selected.",
+      );
+      return;
+    }
+
+    if (!trip.start_date) {
+      window.alert(
+        "This trip does not have a travel date yet.",
+      );
       return;
     }
 
     setSubmitting(true);
 
     try {
-      const bookingID = generateBookingID();
-
-      const timestamp = new Date().toISOString();
-
-      const screenshotDataUrl =
-        await fileToDataUrl(paymentScreenshot);
-
-      const bookingData = {
-        bookingId: bookingID,
-        timestamp,
-
-        trip: trip.title,
-        tripSlug,
-        tripDate: trip.dates,
-
-        name: name.trim(),
-        whatsapp: phone.trim(),
-        email: email.trim(),
-
-        travellers: travellerCount,
-        travellerNames: travellerNames.trim(),
-
-        pricePerPerson: trip.price,
-        totalAmount,
-        advanceAmount,
-
-        notes: message.trim(),
-
-        paymentStatus: "Submitted",
-        bookingStatus: "Pending",
-
-        paymentScreenshot: screenshotDataUrl,
-        paymentScreenshotName: paymentScreenshot.name,
-      };
-
       /*
-       * TEMPORARY FRONTEND STORAGE
-       *
-       * This allows the Admin Bookings page to access
-       * bookings before the backend is connected.
+       * The backend generates the booking ID if one
+       * isn't supplied, so we don't need to generate
+       * one on the frontend.
        */
-      const existingBookings = JSON.parse(
-        localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
+      const response = await fetch(
+        "/api/booking",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            trip: tripId,
+            travelDate: trip.start_date,
+            travellers: travellerCount,
+            message: message.trim(),
+          }),
+        },
       );
 
-      existingBookings.push(bookingData);
+      const result =
+        await response.json();
 
-      localStorage.setItem(
-        BOOKINGS_STORAGE_KEY,
-        JSON.stringify(existingBookings),
-      );
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+            "Failed to submit booking.",
+        );
+      }
+
+      const returnedBookingId =
+        result.bookingId || "";
+
+      setBookingID(returnedBookingId);
 
       /*
-       * Keep Google Sheets logging for now.
+       * Keep the payment screenshot locally in the
+       * browser flow for now.
        *
-       * Do not send the actual screenshot to Google Sheets.
+       * The current backend booking schema does not
+       * accept the screenshot itself.
        */
-      await saveBookingToGoogleSheets({
-        ...bookingData,
-        paymentScreenshot: undefined,
-      });
+      await fileToDataUrl(
+        paymentScreenshot,
+      );
 
       const whatsappMessage = `Hi Chatpate Routes!
 
 I'd like to confirm my booking.
 
-Booking ID: ${bookingID}
+Booking ID: ${
+        returnedBookingId || "Pending"
+      }
 
 Trip: ${trip.title}
-Dates: ${trip.dates}
+Dates: ${formatDateRange(
+        trip.start_date,
+        trip.end_date,
+      )}
 Travellers: ${travellerCount}
 
 Name: ${name.trim()}
 WhatsApp: ${phone.trim()}
 Email: ${email.trim()}
 
-Price per person: ${formatPrice(trip.price)}
+Price per person: ${
+        trip.price != null
+          ? formatPrice(trip.price)
+          : "Price on request"
+      }
 Total Amount: ${formatPrice(totalAmount)}
-Advance Paid: ${formatPrice(advanceAmount)}
+Advance Paid: ${formatPrice(
+        advanceAmount,
+      )}
 
 Traveller Names:
-${travellerNames.trim() || "Same as above"}
+${
+  travellerNames.trim() ||
+  "Same as above"
+}
 
 Notes:
 ${message.trim() || "None"}
@@ -243,7 +349,8 @@ I have completed the 60% advance payment.
 I have submitted my payment screenshot through the website.`;
 
       const url =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+        `https://wa.me/${WHATSAPP_NUMBER}` +
+        `?text=${encodeURIComponent(
           whatsappMessage,
         )}`;
 
@@ -251,24 +358,121 @@ I have submitted my payment screenshot through the website.`;
 
       setSubmitted(true);
     } catch (error) {
-      console.error("Booking submission error:", error);
+      console.error(
+        "Booking submission error:",
+        error,
+      );
 
       window.alert(
-        "Something went wrong while submitting your booking. Please try again.",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while submitting your booking. Please try again.",
       );
     } finally {
       setSubmitting(false);
     }
   }
 
+  /*
+   * Loading state
+   */
+  if (tripLoading) {
+    return (
+      <div className="booking-page-react">
+        <nav className="navbar">
+          <a
+            href="/"
+            className="nav-brand"
+          >
+            Chatpate Routes
+          </a>
+
+          <a
+            href="/trips"
+            className="nav-back"
+          >
+            ← Back to Trips
+          </a>
+        </nav>
+
+        <main className="booking-page">
+          <div className="booking-container">
+            <section className="booking-main">
+              <div className="booking-success active">
+                <h2>Loading trip...</h2>
+
+                <p>
+                  We're getting the trip
+                  details for you.
+                </p>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /*
+   * Trip loading error
+   */
+  if (tripError || !trip) {
+    return (
+      <div className="booking-page-react">
+        <nav className="navbar">
+          <a
+            href="/"
+            className="nav-brand"
+          >
+            Chatpate Routes
+          </a>
+
+          <a
+            href="/trips"
+            className="nav-back"
+          >
+            ← Back to Trips
+          </a>
+        </nav>
+
+        <main className="booking-page">
+          <div className="booking-container">
+            <section className="booking-main">
+              <div className="booking-success active">
+                <h2>
+                  Unable to load trip
+                </h2>
+
+                <p>
+                  {tripError ||
+                    "Trip not found."}
+                </p>
+
+                <a href="/trips">
+                  ← Back to Trips
+                </a>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="booking-page-react">
       <nav className="navbar">
-        <a href="/" className="nav-brand">
+        <a
+          href="/"
+          className="nav-brand"
+        >
           Chatpate Routes
         </a>
 
-        <a href="/trips" className="nav-back">
+        <a
+          href="/trips"
+          className="nav-back"
+        >
           ← Back to Trips
         </a>
       </nav>
@@ -287,8 +491,9 @@ I have submitted my payment screenshot through the website.`;
             </h1>
 
             <p className="page-intro">
-              Fill in your details, complete the payment and
-              confirm your booking with us on WhatsApp.
+              Fill in your details, complete
+              the payment and confirm your
+              booking with us on WhatsApp.
             </p>
 
             {!submitted ? (
@@ -323,7 +528,9 @@ I have submitted my payment screenshot through the website.`;
                         required
                         value={name}
                         onChange={(e) =>
-                          setName(e.target.value)
+                          setName(
+                            e.target.value,
+                          )
                         }
                       />
                     </div>
@@ -345,7 +552,9 @@ I have submitted my payment screenshot through the website.`;
                         required
                         value={phone}
                         onChange={(e) =>
-                          setPhone(e.target.value)
+                          setPhone(
+                            e.target.value,
+                          )
                         }
                       />
                     </div>
@@ -367,7 +576,9 @@ I have submitted my payment screenshot through the website.`;
                         required
                         value={email}
                         onChange={(e) =>
-                          setEmail(e.target.value)
+                          setEmail(
+                            e.target.value,
+                          )
                         }
                       />
                     </div>
@@ -386,7 +597,9 @@ I have submitted my payment screenshot through the website.`;
                         required
                         value={travellers}
                         onChange={(e) =>
-                          setTravellers(e.target.value)
+                          setTravellers(
+                            e.target.value,
+                          )
                         }
                       >
                         <option value="">
@@ -427,9 +640,13 @@ I have submitted my payment screenshot through the website.`;
                         id="travellerNames"
                         className="form-textarea"
                         placeholder="Enter the full names of all travellers"
-                        value={travellerNames}
+                        value={
+                          travellerNames
+                        }
                         onChange={(e) =>
-                          setTravellerNames(e.target.value)
+                          setTravellerNames(
+                            e.target.value,
+                          )
                         }
                       />
                     </div>
@@ -439,7 +656,8 @@ I have submitted my payment screenshot through the website.`;
                         className="form-label"
                         htmlFor="message"
                       >
-                        Anything we should know?
+                        Anything we should
+                        know?
                       </label>
 
                       <textarea
@@ -448,7 +666,9 @@ I have submitted my payment screenshot through the website.`;
                         placeholder="Dietary requirements, questions, special requests..."
                         value={message}
                         onChange={(e) =>
-                          setMessage(e.target.value)
+                          setMessage(
+                            e.target.value,
+                          )
                         }
                       />
                     </div>
@@ -470,9 +690,10 @@ I have submitted my payment screenshot through the website.`;
                     </h3>
 
                     <p className="payment-description">
-                      Scan the QR code using your preferred
-                      UPI app and pay the 60% advance amount
-                      shown below.
+                      Scan the QR code using
+                      your preferred UPI app
+                      and pay the 60% advance
+                      amount shown below.
                     </p>
 
                     <div className="payment-content">
@@ -486,18 +707,24 @@ I have submitted my payment screenshot through the website.`;
                         </div>
 
                         <div className="payment-amount">
-                          {formatPrice(advanceAmount)}
+                          {formatPrice(
+                            advanceAmount,
+                          )}
                         </div>
 
                         <div className="payment-breakdown">
-                          60% of {formatPrice(totalAmount)}
+                          60% of{" "}
+                          {formatPrice(
+                            totalAmount,
+                          )}
                         </div>
 
                         <p className="payment-note">
-                          Complete the advance payment,
-                          upload your payment screenshot
-                          below, and submit it for
-                          verification.
+                          Complete the advance
+                          payment, upload your
+                          payment screenshot
+                          below, and submit it
+                          for verification.
                         </p>
                       </div>
                     </div>
@@ -523,7 +750,8 @@ I have submitted my payment screenshot through the website.`;
                       required
                       onChange={(e) =>
                         setPaymentScreenshot(
-                          e.target.files?.[0] ?? null,
+                          e.target.files?.[0] ??
+                            null,
                         )
                       }
                     />
@@ -531,7 +759,9 @@ I have submitted my payment screenshot through the website.`;
                     {paymentScreenshot && (
                       <p className="payment-screenshot-name">
                         Selected:{" "}
-                        {paymentScreenshot.name}
+                        {
+                          paymentScreenshot.name
+                        }
                       </p>
                     )}
                   </div>
@@ -553,9 +783,9 @@ I have submitted my payment screenshot through the website.`;
                   </button>
 
                   <p className="submit-note">
-                    Your booking details and payment
-                    screenshot will be submitted for
-                    verification.
+                    Your booking details and
+                    payment screenshot will be
+                    submitted for verification.
                   </p>
                 </div>
               </form>
@@ -572,11 +802,21 @@ I have submitted my payment screenshot through the website.`;
                 <h2>Almost there.</h2>
 
                 <p>
-                  Your booking details and payment
-                  screenshot have been submitted
-                  successfully. Your payment is now being
-                  verified by the Chatpate Routes team.
+                  Your booking details and
+                  payment screenshot have been
+                  submitted successfully. Your
+                  payment is now being verified
+                  by the Chatpate Routes team.
                 </p>
+
+                {bookingID && (
+                  <p>
+                    <strong>
+                      Booking ID:
+                    </strong>{" "}
+                    {bookingID}
+                  </p>
+                )}
 
                 <a
                   href={whatsappURL}
@@ -597,10 +837,27 @@ I have submitted my payment screenshot through the website.`;
           <aside className="booking-summary">
             <div className="summary-card">
               <div className="summary-image">
-                <img
-                  src={trip.image}
-                  alt={trip.title}
-                />
+                {trip.cover_image_url ? (
+                  <img
+                    src={trip.cover_image_url}
+                    alt={trip.title}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minHeight: "220px",
+                      display: "flex",
+                      alignItems:
+                        "center",
+                      justifyContent:
+                        "center",
+                    }}
+                  >
+                    No trip image
+                  </div>
+                )}
               </div>
 
               <div className="summary-body">
@@ -619,7 +876,10 @@ I have submitted my payment screenshot through the website.`;
                     </span>
 
                     <span className="summary-value">
-                      {trip.dates}
+                      {formatDateRange(
+                        trip.start_date,
+                        trip.end_date,
+                      )}
                     </span>
                   </div>
 
@@ -629,7 +889,9 @@ I have submitted my payment screenshot through the website.`;
                     </span>
 
                     <span className="summary-value">
-                      {trip.duration}
+                      {trip.duration_days
+                        ? `${trip.duration_days} Days`
+                        : "Not specified"}
                     </span>
                   </div>
 
@@ -639,7 +901,8 @@ I have submitted my payment screenshot through the website.`;
                     </span>
 
                     <span className="summary-value">
-                      {trip.location}
+                      {trip.destination ||
+                        "Not specified"}
                     </span>
                   </div>
 
@@ -649,7 +912,9 @@ I have submitted my payment screenshot through the website.`;
                     </span>
 
                     <span className="summary-value">
-                      {trip.availability}
+                      {getAvailability(
+                        trip.capacity,
+                      )}
                     </span>
                   </div>
                 </div>
@@ -661,7 +926,9 @@ I have submitted my payment screenshot through the website.`;
                     </div>
 
                     <div className="summary-price-value">
-                      {formatPrice(totalAmount)}
+                      {formatPrice(
+                        totalAmount,
+                      )}
                     </div>
 
                     <div className="summary-calculation">

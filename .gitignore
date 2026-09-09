@@ -32,3 +32,4 @@ dist-ssr
 *.sw?
 google-service-account.json
 .env.local
+.env

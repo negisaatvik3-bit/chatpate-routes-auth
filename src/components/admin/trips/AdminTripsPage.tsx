@@ -1,8 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import "./admin-trips.css";
+import { supabase } from "@/integerations/supabase/client";
 
 type TripStatus = "Published" | "Draft" | "Archived";
+
+type BackendTrip = {
+  id: string;
+  title: string;
+  destination: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  price: number | null;
+  capacity: number | null;
+  status: "draft" | "published" | "archived";
+};
 
 type Trip = {
   id: string;
@@ -14,71 +26,97 @@ type Trip = {
   status: TripStatus;
 };
 
-type SavedTrip = {
-  id: string;
-  status: TripStatus;
-  tripName: string;
-  destination: string;
-  startDate: string;
-  endDate: string;
-  price: string;
-  availableSeats: string;
-};
-
-const initialTrips: Trip[] = [
-  {
-    id: "bir-barot-valley",
-    title: "Bir × Barot Valley 2.0",
-    destination: "Himachal Pradesh",
-    dates: "4–6 Sept",
-    price: 8999,
-    seats: 10,
-    status: "Published",
-  },
-  {
-    id: "ghiyagi-jibhi",
-    title: "Ghiyagi × Jibhi",
-    destination: "Himachal Pradesh",
-    dates: "18–20 Sept",
-    price: 7499,
-    seats: 8,
-    status: "Published",
-  },
-  {
-    id: "rishikesh",
-    title: "Rishikesh",
-    destination: "Uttarakhand",
-    dates: "27–28 Sept",
-    price: 5999,
-    seats: 12,
-    status: "Published",
-  },
-];
-
 export default function AdminTripsPage() {
-  const [trips, setTrips] = useState(initialTrips);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"All" | TripStatus>("All");
+  const [statusFilter, setStatusFilter] =
+    useState<"All" | TripStatus>("All");
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-    const savedTrips = JSON.parse(
-      localStorage.getItem("chatpate-admin-trips") || "[]",
-    ) as SavedTrip[];
+  const formatStatus = (
+    status: BackendTrip["status"],
+  ): TripStatus => {
+    switch (status) {
+      case "published":
+        return "Published";
+      case "archived":
+        return "Archived";
+      default:
+        return "Draft";
+    }
+  };
 
-    const formattedTrips: Trip[] = savedTrips.map((trip) => ({
-      id: trip.id,
-      title: trip.tripName || "Untitled Trip",
-      destination: trip.destination || "—",
-      dates:
-        trip.startDate && trip.endDate
-          ? `${trip.startDate} – ${trip.endDate}`
-          : "—",
-      price: Number(trip.price) || 0,
-      seats: Number(trip.availableSeats) || 0,
-      status: trip.status || "Draft",
-    }));
+  const formatDates = (
+    startDate: string | null,
+    endDate: string | null,
+  ) => {
+    if (!startDate && !endDate) return "—";
 
-    setTrips([...initialTrips, ...formattedTrips]);
+    if (startDate && endDate) {
+      return `${startDate} – ${endDate}`;
+    }
+
+    return startDate || endDate || "—";
+  };
+
+  const loadTrips = async () => {
+    try {
+      setIsLoading(true);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        alert("Please log in as an administrator.");
+        return;
+      }
+
+      const response = await fetch("/api/admin/trips", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Could not load trips.",
+        );
+      }
+
+      const formattedTrips: Trip[] = (
+        result.trips as BackendTrip[]
+      ).map((trip) => ({
+        id: trip.id,
+        title: trip.title || "Untitled Trip",
+        destination: trip.destination || "—",
+        dates: formatDates(
+          trip.start_date,
+          trip.end_date,
+        ),
+        price: Number(trip.price) || 0,
+        seats: Number(trip.capacity) || 0,
+        status: formatStatus(trip.status),
+      }));
+
+      setTrips(formattedTrips);
+    } catch (error) {
+      console.error("Load trips error:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not load trips.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTrips();
   }, []);
 
   const filteredTrips = useMemo(() => {
@@ -91,61 +129,76 @@ export default function AdminTripsPage() {
         trip.destination.toLowerCase().includes(query);
 
       const matchesStatus =
-        statusFilter === "All" || trip.status === statusFilter;
+        statusFilter === "All" ||
+        trip.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
   }, [trips, search, statusFilter]);
 
-  const togglePublish = (id: string) => {
-    setTrips((currentTrips) =>
-      currentTrips.map((trip) => {
-        if (trip.id !== id) return trip;
+  const updateTripStatus = async (
+    id: string,
+    status: "draft" | "published" | "archived",
+  ) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-        return {
-          ...trip,
-          status: trip.status === "Published" ? "Draft" : "Published",
-        };
-      }),
-    );
+      if (!session?.access_token) {
+        alert("Please log in as an administrator.");
+        return;
+      }
+
+      const response = await fetch(`/api/trips/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          status,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Could not update trip.",
+        );
+      }
+
+      await loadTrips();
+    } catch (error) {
+      console.error("Update trip status error:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not update trip.",
+      );
+    }
   };
 
-const archiveTrip = (id: string) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to archive this trip?",
-  );
+  const togglePublish = async (trip: Trip) => {
+    const nextStatus =
+      trip.status === "Published"
+        ? "draft"
+        : "published";
 
-  if (!confirmed) return;
+    await updateTripStatus(trip.id, nextStatus);
+  };
 
-  setTrips((currentTrips) =>
-    currentTrips.map((trip) =>
-      trip.id === id
-        ? {
-            ...trip,
-            status: "Archived",
-          }
-        : trip,
-    ),
-  );
+  const archiveTrip = async (id: string) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to archive this trip?",
+    );
 
-  const savedTrips = JSON.parse(
-    localStorage.getItem("chatpate-admin-trips") || "[]",
-  ) as SavedTrip[];
+    if (!confirmed) return;
 
-  const updatedSavedTrips = savedTrips.map((trip) =>
-    trip.id === id
-      ? {
-          ...trip,
-          status: "Archived" as const,
-        }
-      : trip,
-  );
-
-  localStorage.setItem(
-    "chatpate-admin-trips",
-    JSON.stringify(updatedSavedTrips),
-  );
-};
+    await updateTripStatus(id, "archived");
+  };
 
   return (
     <main className="admin-trips-page">
@@ -161,7 +214,10 @@ const archiveTrip = (id: string) => {
             </p>
           </div>
 
-          <Link to ="/admin/trips/new" className="admin-create-button">
+          <Link
+            to="/admin/trips/new"
+            className="admin-create-button"
+          >
             <span>+</span>
             Create Trip
           </Link>
@@ -175,26 +231,36 @@ const archiveTrip = (id: string) => {
               type="text"
               placeholder="Search trips or destinations..."
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) =>
+                setSearch(event.target.value)
+              }
             />
           </div>
 
           <div className="admin-filter">
-            <label htmlFor="status-filter">Status</label>
+            <label htmlFor="status-filter">
+              Status
+            </label>
 
             <select
               id="status-filter"
               value={statusFilter}
               onChange={(event) =>
                 setStatusFilter(
-                  event.target.value as "All" | TripStatus,
+                  event.target.value as
+                    | "All"
+                    | TripStatus,
                 )
               }
             >
               <option value="All">All</option>
-              <option value="Published">Published</option>
+              <option value="Published">
+                Published
+              </option>
               <option value="Draft">Draft</option>
-              <option value="Archived">Archived</option>
+              <option value="Archived">
+                Archived
+              </option>
             </select>
           </div>
         </section>
@@ -203,9 +269,12 @@ const archiveTrip = (id: string) => {
           <div className="admin-table-header">
             <div>
               <h2>All Trips</h2>
+
               <span>
                 {filteredTrips.length}{" "}
-                {filteredTrips.length === 1 ? "trip" : "trips"}
+                {filteredTrips.length === 1
+                  ? "trip"
+                  : "trips"}
               </span>
             </div>
           </div>
@@ -225,89 +294,120 @@ const archiveTrip = (id: string) => {
               </thead>
 
               <tbody>
-                {filteredTrips.map((trip) => (
-                  <tr key={trip.id}>
-                    <td>
-                      <div className="admin-trip-name">
-                        {trip.title}
-                      </div>
-                    </td>
-
-                    <td>{trip.destination}</td>
-
-                    <td>{trip.dates}</td>
-
-                    <td className="admin-price">
-                      ₹{trip.price.toLocaleString("en-IN")}
-                    </td>
-
-                    <td>{trip.seats}</td>
-
-                    <td>
-                      <span
-                        className={`admin-status admin-status-${trip.status.toLowerCase()}`}
-                      >
-                        <span className="admin-status-dot" />
-                        {trip.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <div className="admin-actions">
-                        <Link
-                          to="/trip-detail"
-                          className="admin-action admin-action-view"
-                        >
-                          View
-                        </Link>
-
-                        <Link
-                          to="/admin/trips/$tripId/edit"
-                          params={{ tripId: trip.id }}
-                          className="admin-action"
-                        >
-                          Edit
-                        </Link>
-
-                        {trip.status !== "Archived" && (
-                          <>
-                            <button
-                              type="button"
-                              className="admin-action"
-                              onClick={() => togglePublish(trip.id)}
-                            >
-                              {trip.status === "Published"
-                                ? "Unpublish"
-                                : "Publish"}
-                            </button>
-
-                            <button
-                              type="button"
-                              className="admin-action admin-action-danger"
-                              onClick={() => archiveTrip(trip.id)}
-                            >
-                              Archive
-                            </button>
-                          </>
-                        )}
-                      </div>
+                {isLoading ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      style={{ textAlign: "center" }}
+                    >
+                      Loading trips...
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredTrips.map((trip) => (
+                    <tr key={trip.id}>
+                      <td>
+                        <div className="admin-trip-name">
+                          {trip.title}
+                        </div>
+                      </td>
+
+                      <td>{trip.destination}</td>
+
+                      <td>{trip.dates}</td>
+
+                      <td className="admin-price">
+                        ₹
+                        {trip.price.toLocaleString(
+                          "en-IN",
+                        )}
+                      </td>
+
+                      <td>{trip.seats}</td>
+
+                      <td>
+                        <span
+                          className={`admin-status admin-status-${trip.status.toLowerCase()}`}
+                        >
+                          <span className="admin-status-dot" />
+                          {trip.status}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="admin-actions">
+                          <Link
+                            to="/trip-detail"
+                            search={{
+                              trip: trip.id,
+                            }}
+                            className="admin-action admin-action-view"
+                          >
+                            View
+                          </Link>
+
+                          <Link
+                            to="/admin/trips/$tripId/edit"
+                            params={{
+                              tripId: trip.id,
+                            }}
+                            className="admin-action"
+                          >
+                            Edit
+                          </Link>
+
+                          {trip.status !==
+                            "Archived" && (
+                            <>
+                              <button
+                                type="button"
+                                className="admin-action"
+                                onClick={() =>
+                                  togglePublish(trip)
+                                }
+                              >
+                                {trip.status ===
+                                "Published"
+                                  ? "Unpublish"
+                                  : "Publish"}
+                              </button>
+
+                              <button
+                                type="button"
+                                className="admin-action admin-action-danger"
+                                onClick={() =>
+                                  archiveTrip(
+                                    trip.id,
+                                  )
+                                }
+                              >
+                                Archive
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
 
-            {filteredTrips.length === 0 && (
-              <div className="admin-empty-state">
-                <div className="admin-empty-icon">⌕</div>
+            {!isLoading &&
+              filteredTrips.length === 0 && (
+                <div className="admin-empty-state">
+                  <div className="admin-empty-icon">
+                    ⌕
+                  </div>
 
-                <h3>No trips found</h3>
+                  <h3>No trips found</h3>
 
-                <p>
-                  Try changing your search or status filter.
-                </p>
-              </div>
-            )}
+                  <p>
+                    Try changing your search or status
+                    filter.
+                  </p>
+                </div>
+              )}
           </div>
         </section>
       </div>

@@ -1,39 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import "./admin-trip-bookings.css";
+import { supabase } from "@/integerations/supabase/client";
 
-const BOOKINGS_STORAGE_KEY = "chatpate_routes_bookings";
-
-type PaymentStatus =
-  | "Pending"
-  | "Submitted"
-  | "Paid"
-  | "Failed";
-
-type BookingStatus =
-  | "Pending"
-  | "Confirmed"
-  | "Cancelled"
-  | "Completed";
-
-type Booking = {
-  bookingId: string;
-  timestamp: string;
-  trip: string;
-  tripSlug: string;
-  tripDate: string;
-  name: string;
-  whatsapp: string;
+type BackendBooking = {
+  id: string;
+  full_name: string;
   email: string;
-  travellers: number;
-  travellerNames: string;
-  pricePerPerson: number;
-  totalAmount: number;
-  advanceAmount: number;
-  notes: string;
-  paymentStatus: PaymentStatus;
-  bookingStatus: BookingStatus;
-  paymentScreenshot?: string;
-  paymentScreenshotName?: string;
+  phone: string;
+  number_of_people: number;
+  booking_date: string;
+  special_requests: string | null;
+  status: "in_progress" | "pending" | "confirmed" | "cancelled" | "completed";
+  payment_status: "pending" | "paid" | "failed" | "refunded";
+  total_amount: number | null;
+  created_at: string;
+
+  trip?: {
+    id: string;
+    title: string;
+    slug: string;
+    destination: string;
+    start_date: string;
+    end_date: string;
+    price: number | null;
+  } | null;
 };
 
 type Props = {
@@ -49,95 +39,134 @@ export default function AdminTripBookings({
   tripId,
   tripPrice = 8999,
 }: Props) {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<BackendBooking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadBookings();
-
-    const handleStorageChange = () => {
-      loadBookings();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
   }, [tripId]);
 
-  function loadBookings() {
-    try {
-      const stored = JSON.parse(
-        localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
-      ) as Booking[];
+  async function getAccessToken() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      const tripBookings = stored.filter(
+    return session?.access_token ?? null;
+  }
+
+  async function loadBookings() {
+    setLoading(true);
+    setError("");
+
+    try {
+      const accessToken = await getAccessToken();
+
+      if (!accessToken) {
+        setError("You must be logged in as an administrator.");
+        setBookings([]);
+        return;
+      }
+
+      const response = await fetch("/api/admin/bookings", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Could not retrieve bookings.",
+        );
+      }
+
+      const allBookings = (data.bookings ?? []) as BackendBooking[];
+
+      const tripBookings = allBookings.filter(
         (booking) =>
-          booking.tripSlug === tripId ||
-          booking.trip === tripId,
+          booking.trip?.id === tripId ||
+          booking.trip?.slug === tripId,
       );
 
       setBookings(tripBookings);
     } catch (error) {
       console.error("Could not load bookings:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Could not load bookings.",
+      );
+
       setBookings([]);
+    } finally {
+      setLoading(false);
     }
   }
 
-  const stats = useMemo(() => {
-    const totalBookings = bookings.length;
-
-    const pendingPayments = bookings.filter(
-      (booking) =>
-        booking.paymentStatus === "Pending" ||
-        booking.paymentStatus === "Submitted",
-    ).length;
-
-    const confirmedBookings = bookings.filter(
-      (booking) => booking.bookingStatus === "Confirmed",
-    ).length;
-
-    const totalRevenue = bookings
-      .filter((booking) => booking.paymentStatus === "Paid")
-      .reduce(
-        (total, booking) => total + Number(booking.advanceAmount || 0),
-        0,
-      );
-
-    return {
-      totalBookings,
-      pendingPayments,
-      confirmedBookings,
-      totalRevenue,
-    };
-  }, [bookings]);
-
-  function markPaymentSuccessful(bookingId: string) {
+  async function markPaymentSuccessful(bookingId: string) {
     try {
-      const stored = JSON.parse(
-        localStorage.getItem(BOOKINGS_STORAGE_KEY) || "[]",
-      ) as Booking[];
+      const accessToken = await getAccessToken();
 
-      const updatedBookings = stored.map((booking) =>
-        booking.bookingId === bookingId
-          ? {
-              ...booking,
-              paymentStatus: "Paid" as PaymentStatus,
-              bookingStatus: "Confirmed" as BookingStatus,
-            }
-          : booking,
+      if (!accessToken) {
+        window.alert("You must be logged in as an administrator.");
+        return;
+      }
+
+      const response = await fetch(
+        `/api/admin/bookings/${bookingId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            payment_status: "paid",
+          }),
+        },
       );
 
-      localStorage.setItem(
-        BOOKINGS_STORAGE_KEY,
-        JSON.stringify(updatedBookings),
-      );
+      const data = await response.json();
 
-      loadBookings();
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Could not update booking.",
+        );
+      }
+
+      await loadBookings();
     } catch (error) {
       console.error("Could not update booking:", error);
+
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Could not update booking.",
+      );
     }
   }
+
+  const totalBookings = bookings.length;
+
+  const pendingPayments = bookings.filter(
+    (booking) => booking.payment_status === "pending",
+  ).length;
+
+  const confirmedBookings = bookings.filter(
+    (booking) => booking.status === "confirmed",
+  ).length;
+
+  const advanceCollected = bookings
+    .filter((booking) => booking.payment_status === "paid")
+    .reduce(
+      (total, booking) =>
+        total + Math.round(Number(booking.total_amount || 0) * 0.6),
+      0,
+    );
 
   return (
     <div className="admin-bookings">
@@ -145,9 +174,10 @@ export default function AdminTripBookings({
       <div className="admin-bookings-heading">
         <div>
           <h2>Bookings</h2>
+
           <p>
-            View travellers, payment submissions and booking status
-            for this trip.
+            View travellers, payment submissions and booking
+            status for this trip.
           </p>
         </div>
       </div>
@@ -157,12 +187,24 @@ export default function AdminTripBookings({
         <div className="admin-bookings-table-header">
           <div>
             <h3>All Bookings</h3>
+
             <span>
-              {bookings.length}{" "}
-              {bookings.length === 1 ? "booking" : "bookings"}
+              {loading
+                ? "Loading..."
+                : `${bookings.length} ${
+                    bookings.length === 1
+                      ? "booking"
+                      : "bookings"
+                  }`}
             </span>
           </div>
         </div>
+
+        {error && (
+          <div className="admin-bookings-error">
+            {error}
+          </div>
+        )}
 
         <div className="admin-bookings-table-wrapper">
           <table className="admin-bookings-table">
@@ -181,140 +223,129 @@ export default function AdminTripBookings({
 
             <tbody>
               {bookings.length > 0 ? (
-                bookings.map((booking, index) => (
-                  <tr key={booking.bookingId}>
-                    <td>
-                      <span className="admin-booking-number">
-                        {index + 1}
-                      </span>
-                    </td>
+                bookings.map((booking, index) => {
+                  const totalAmount =
+                    Number(booking.total_amount) ||
+                    tripPrice * booking.number_of_people;
 
-                    <td>
-                      <div className="admin-booking-person">
-                        <strong>{booking.name}</strong>
+                  const advanceAmount = Math.round(
+                    totalAmount * 0.6,
+                  );
 
-                        {booking.travellerNames && (
-                          <span>
-                            {booking.travellerNames}
+                  return (
+                    <tr key={booking.id}>
+                      <td>
+                        <span className="admin-booking-number">
+                          {index + 1}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="admin-booking-person">
+                          <strong>{booking.full_name}</strong>
+
+                          <span>{booking.email}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className="admin-booking-travellers">
+                          {booking.number_of_people}
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong>
+                          {formatPrice(totalAmount)}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <strong className="admin-booking-advance">
+                          {formatPrice(advanceAmount)}
+                        </strong>
+                      </td>
+
+                      <td>
+                        <span className="admin-no-screenshot">
+                          Backend upload not connected
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className={`admin-payment-badge admin-payment-${booking.payment_status}`}
+                        >
+                          <span className="admin-payment-dot" />
+
+                          {booking.payment_status}
+                        </span>
+                      </td>
+
+                      <td>
+                        {booking.payment_status !== "paid" &&
+                        booking.status !== "confirmed" ? (
+                          <button
+                            type="button"
+                            className="admin-payment-success"
+                            onClick={() =>
+                              markPaymentSuccessful(
+                                booking.id,
+                              )
+                            }
+                          >
+                            Payment Successful
+                          </button>
+                        ) : (
+                          <span className="admin-confirmed-label">
+                            ✓ Confirmed
                           </span>
                         )}
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="admin-booking-travellers">
-                        {booking.travellers}
-                      </span>
-                    </td>
-
-                    <td>
-                      <strong>
-                        {formatPrice(
-                          booking.totalAmount ||
-                            tripPrice * booking.travellers,
-                        )}
-                      </strong>
-                    </td>
-
-                    <td>
-                      <strong className="admin-booking-advance">
-                        {formatPrice(
-                          booking.advanceAmount ||
-                            Math.round(
-                              booking.totalAmount * 0.6,
-                            ),
-                        )}
-                      </strong>
-                    </td>
-
-                    <td>
-                      {booking.paymentScreenshot ? (
-                        <a
-                          href={booking.paymentScreenshot}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="admin-payment-screenshot"
-                        >
-                          View Screenshot
-                        </a>
-                      ) : (
-                        <span className="admin-no-screenshot">
-                          Not uploaded
-                        </span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span
-                        className={`admin-payment-badge admin-payment-${booking.paymentStatus.toLowerCase()}`}
-                      >
-                        <span className="admin-payment-dot" />
-                        {booking.paymentStatus}
-                      </span>
-                    </td>
-
-                    <td>
-                      {booking.paymentStatus !== "Paid" &&
-                      booking.bookingStatus !== "Confirmed" ? (
-                        <button
-                          type="button"
-                          className="admin-payment-success"
-                          onClick={() =>
-                            markPaymentSuccessful(
-                              booking.bookingId,
-                            )
-                          }
-                        >
-                          Payment Successful
-                        </button>
-                      ) : (
-                        <span className="admin-confirmed-label">
-                          ✓ Confirmed
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <>
-                  {[1, 2, 3, 4].map((row) => (
-                    <tr
-                      key={`empty-booking-row-${row}`}
-                      className="admin-empty-booking-row"
-                    >
-                      <td>
-                        <span className="admin-empty-line short" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line short" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line medium" />
-                      </td>
-
-                      <td>
-                        <span className="admin-empty-line medium" />
                       </td>
                     </tr>
-                  ))}
+                  );
+                })
+              ) : (
+                <>
+                  {!loading &&
+                    [1, 2, 3, 4].map((row) => (
+                      <tr
+                        key={`empty-booking-row-${row}`}
+                        className="admin-empty-booking-row"
+                      >
+                        <td>
+                          <span className="admin-empty-line short" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line short" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line medium" />
+                        </td>
+
+                        <td>
+                          <span className="admin-empty-line medium" />
+                        </td>
+                      </tr>
+                    ))}
                 </>
               )}
             </tbody>

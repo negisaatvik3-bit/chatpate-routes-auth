@@ -1,9 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import birCopy from "@/assets/bir-copy.png";
-import jibhi from "@/assets/jibhi.png";
-import rishikesh from "@/assets/rishikesh.png";
-import jim from "@/assets/jim.png";
-import udaipur from "@/assets/udaipur.png";
 import communityImage from "@/assets/03.jpg";
 import tripHero from "@/assets/trip.png";
 import { TripsNav } from "./TripsNav";
@@ -13,7 +8,25 @@ import { Link } from "@tanstack/react-router";
 type Filter = "all" | "upcoming" | "weekend" | "backpacking" | "popular";
 type Month = "all" | "september" | "october" | "november" | "december";
 
+type BackendTrip = {
+  id: string;
+  title: string;
+  slug: string;
+  short_description?: string | null;
+  description?: string | null;
+  destination?: string | null;
+  trip_type?: string | null;
+  duration_days?: number | null;
+  price?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  capacity?: number | null;
+  cover_image_url?: string | null;
+  status: "draft" | "published" | "archived";
+};
+
 type Trip = {
+  id: string;
   name: string;
   location: string;
   dates: string;
@@ -29,83 +42,79 @@ type Trip = {
   href: string;
 };
 
-const trips: Trip[] = [
-  {
-    name: "Bir × Barot Valley 2.0",
-    location: "Himachal Pradesh, India",
-    dates: "4–6 Sept",
-    duration: "3 Days",
-    price: "₹8,999",
-    season: "SEPTEMBER",
-    month: "september",
-    availability: "10 SPOTS LEFT",
-    image: birCopy,
-    alt: "Bir and Barot Valley",
-    categories: ["upcoming", "weekend", "himachal", "backpacking"],
-    search: "bir barot valley himachal backpacking",
-    href: "/trip-detail",
-  },
-  {
-    name: "Ghiyagi × Jibhi",
-    location: "Himachal Pradesh, India",
-    dates: "18–20 Sept",
-    duration: "3 Days",
-    price: "₹7,499",
-    season: "SEPTEMBER",
-    month: "september",
-    availability: "8 SPOTS LEFT",
-    image: jibhi,
-    alt: "Ghiyagi and Jibhi",
-    categories: ["upcoming", "retreat", "himachal"],
-    search: "ghiyagi jibhi himachal retreat",
-    href: "/trips/ghiyagi-jibhi",
-  },
-  {
-    name: "Rishikesh",
-    location: "Uttarakhand, India",
-    dates: "27–28 Sept",
-    duration: "2 Days",
-    price: "₹5,999",
-    season: "SEPTEMBER",
-    month: "september",
-    availability: "10 SPOTS LEFT",
-    image: rishikesh,
-    alt: "Rishikesh",
-    categories: ["upcoming", "weekend", "backpacking"],
-    search: "rishikesh uttarakhand backpacking weekend",
-    href: "/trips/rishikesh",
-  },
-  {
-    name: "Jim Corbett",
-    location: "Uttarakhand, India",
-    dates: "11–13 Oct",
-    duration: "3 Days",
-    price: "₹8,599",
-    season: "OCTOBER",
-    month: "october",
-    availability: "10 SPOTS LEFT",
-    image: jim,
-    alt: "Jim Corbett",
-    categories: ["upcoming", "weekend"],
-    search: "jim corbett uttarakhand weekend",
-    href: "/trips/jim-corbett",
-  },
-  {
-    name: "Udaipur",
-    location: "Rajasthan, India",
-    dates: "30 Oct–1 Nov",
-    duration: "3 Days",
-    price: "₹9,499",
-    season: "OCTOBER",
-    month: "october",
-    availability: "3 SPOTS LEFT",
-    image: udaipur,
-    alt: "Udaipur",
-    categories: ["upcoming", "weekend"],
-    search: "udaipur rajasthan weekend",
-    href: "/trips/udaipur",
-  },
-];
+function formatDateRange(startDate?: string | null, endDate?: string | null) {
+  if (!startDate) return "Dates to be announced";
+
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : null;
+
+  const startText = start.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+
+  if (!end) return startText;
+
+  const endText = end.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+
+  return `${startText}–${endText}`;
+}
+
+function getMonth(date?: string | null): Month {
+  if (!date) return "all";
+
+  const month = new Date(date).getMonth();
+
+  const monthMap: Record<number, Month> = {
+    8: "september",
+    9: "october",
+    10: "november",
+    11: "december",
+  };
+
+  return monthMap[month] ?? "all";
+}
+
+function formatPrice(price?: number | null) {
+  if (price == null) return "Price on request";
+
+  return `₹${price.toLocaleString("en-IN")}`;
+}
+
+function backendTripToTrip(trip: BackendTrip): Trip {
+  const month = getMonth(trip.start_date);
+
+  return {
+    id: trip.id,
+    name: trip.title,
+    location: trip.destination || "India",
+    dates: formatDateRange(trip.start_date, trip.end_date),
+    duration: trip.duration_days
+      ? `${trip.duration_days} Day${trip.duration_days === 1 ? "" : "s"}`
+      : "Flexible",
+    price: formatPrice(trip.price),
+    season: month === "all" ? "UPCOMING" : month.toUpperCase(),
+    month,
+    availability: trip.capacity
+      ? `${trip.capacity} SPOTS`
+      : "CHECK AVAILABILITY",
+    image: trip.cover_image_url || tripHero,
+    alt: trip.title,
+    categories: [
+      "upcoming",
+      ...(trip.trip_type
+        ? [trip.trip_type.toLowerCase()]
+        : []),
+    ],
+    search: `${trip.title} ${trip.destination || ""} ${
+      trip.trip_type || ""
+    }`.toLowerCase(),
+    href: `/trips/${trip.slug}`,
+  };
+}
 
 const filterOptions: { value: Filter; label: string }[] = [
   { value: "all", label: "All Trips" },
@@ -126,7 +135,7 @@ const monthOptions: { value: Month; label: string }[] = [
 function TripCard({ trip, index }: { trip: Trip; index: number }) {
   return (
     <article className="trips-trip-card trips-reveal-visible" style={{ transitionDelay: `${index * 60}ms` }}>
-      <Link to="/trip-detail" className="trips-trip-link">
+      <Link to="/trip-detail" search={{ trip: trip.id }} className="trips-trip-link">
         <div className="trips-trip-image">
           <img src={trip.image} alt={trip.alt} />
           <div className="trips-trip-season">{trip.season}</div>
@@ -166,6 +175,42 @@ export function TripsPage() {
   const [month, setMonth] = useState<Month>("all");
   const [monthOpen, setMonthOpen] = useState(false);
   const monthRef = useRef<HTMLDivElement>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+
+  useEffect(() => {
+  const loadTrips = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const response = await fetch("/api/trips");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to load trips.");
+      }
+
+      const backendTrips: BackendTrip[] = result.trips || [];
+
+      setTrips(backendTrips.map(backendTripToTrip));
+    } catch (error) {
+      console.error("Failed to load trips:", error);
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load trips.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  loadTrips();
+}, []);
 
   useEffect(() => {
     const handleOutside = (event: MouseEvent) => {
@@ -270,13 +315,29 @@ export function TripsPage() {
             </div>
           </div>
 
-          <div className="trips-trip-grid">
-            {visibleTrips.map((trip, index) => (
-              <TripCard key={trip.name} trip={trip} index={index} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="trips-empty-state">
+              <h3>Loading trips...</h3>
+              <p>Finding the latest escapes for you.</p>
+            </div>
+          ) : error ? (
+            <div className="trips-empty-state">
+              <h3>Unable to load trips.</h3>
+              <p>{error}</p>
+            </div>
+          ) : (
+            <div className="trips-trip-grid">
+              {visibleTrips.map((trip, index) => (
+                <TripCard
+                  key={trip.id}
+                  trip={trip}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
 
-          {visibleTrips.length === 0 && (
+          {!isLoading && !error && visibleTrips.length === 0 && (
             <div className="trips-empty-state">
               <h3>No trips found.</h3>
               <p>Try another destination or clear your filters.</p>

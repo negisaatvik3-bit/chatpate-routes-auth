@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { supabase } from "../../../integerations/supabase/client";
 import "./admin-trip-editor.css";
 import AdminTripBookings from "./AdminTripBookings";
 
@@ -99,6 +100,10 @@ export default function AdminTripEditor({
 }: AdminTripEditorProps) {
   const [activeSection, setActiveSection] =
     useState<Section>("overview");
+  const [backendTripId, setBackendTripId] = useState<string | null>(
+  tripId === "new" ? null : tripId,
+  );
+  const [isSaving, setIsSaving] = useState(false);
   const [adminBookings, setAdminBookings] = useState<AdminBooking[]>([]);
 
   const [tripName, setTripName] = useState("");
@@ -152,53 +157,134 @@ export default function AdminTripEditor({
 
   const [cancellationPolicy, setCancellationPolicy] = useState("");
 
-  useEffect(() => {
+useEffect(() => {
   if (tripId === "new") return;
 
-  const savedTrips = JSON.parse(
-    localStorage.getItem("chatpate-admin-trips") || "[]",
-  ) as SavedTrip[];
+  const loadTrip = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  const savedTrip = savedTrips.find((trip) => trip.id === tripId);
+      if (!session?.access_token) {
+        alert("Please log in as an administrator.");
+        return;
+      }
 
-  if (!savedTrip) return;
+      const response = await fetch("/api/admin/trips", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
-  setTripName(savedTrip.tripName);
-  setDestination(savedTrip.destination);
-  setSlug(savedTrip.slug);
-  setShortDescription(savedTrip.shortDescription);
-  setDetailedDescription(savedTrip.detailedDescription);
+      const result = await response.json();
 
-  setStartDate(savedTrip.startDate);
-  setEndDate(savedTrip.endDate);
-  setDuration(savedTrip.duration);
-  setPrice(savedTrip.price);
-  setCapacity(savedTrip.capacity);
-  setAvailableSeats(savedTrip.availableSeats);
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Could not load trip.");
+      }
 
-  setTripType(savedTrip.tripType);
-  setCoverImage(savedTrip.coverImage);
-  setGallery(savedTrip.gallery);
+      const trip = result.trips.find(
+        (item: { id: string; slug: string }) =>
+          item.id === tripId || item.slug === tripId,
+      );
 
-  setHost(savedTrip.host);
-  setPickupPoint(savedTrip.pickupPoint);
-  setSuitableFor(savedTrip.suitableFor);
+      if (!trip) {
+        alert("Trip not found.");
+        return;
+      }
+      setBackendTripId(trip.id);
 
-  setItinerary(savedTrip.itinerary);
+      setTripName(trip.title ?? "");
+      setDestination(trip.destination ?? "");
+      setSlug(trip.slug ?? "");
+      setShortDescription(trip.short_description ?? "");
+      setDetailedDescription(trip.description ?? "");
 
-  setAccommodation(savedTrip.accommodation);
-  setAccommodationDescription(savedTrip.accommodationDescription);
-  setStayLocation(savedTrip.stayLocation);
-  setGroupSize(savedTrip.groupSize);
+      setStartDate(trip.start_date ?? "");
+      setEndDate(trip.end_date ?? "");
+      setDuration(
+        trip.duration_days != null
+          ? String(trip.duration_days)
+          : "",
+      );
+      setPrice(
+        trip.price != null
+          ? String(trip.price)
+          : "",
+      );
+      setCapacity(
+        trip.capacity != null
+          ? String(trip.capacity)
+          : "",
+      );
 
-  setIncluded(savedTrip.included);
-  setNotIncluded(savedTrip.notIncluded);
-  setPackingItems(savedTrip.packingItems);
-  setRules(savedTrip.rules);
+      setTripType(trip.trip_type ?? "");
 
-  setFaqs(savedTrip.faqs);
+      setAccommodation(trip.accommodation ?? "");
+      setAccommodationDescription(
+        trip.accommodation_description ?? "",
+      );
+      setStayLocation(trip.stay_location ?? "");
+      setGroupSize(trip.group_size ?? "");
 
-  setCancellationPolicy(savedTrip.cancellationPolicy);
+      setIncluded(
+        Array.isArray(trip.included) && trip.included.length > 0
+          ? trip.included
+          : [""],
+      );
+
+      setPackingItems(
+        Array.isArray(trip.what_to_bring) &&
+          trip.what_to_bring.length > 0
+          ? trip.what_to_bring
+          : [""],
+      );
+
+      setRules(
+        Array.isArray(trip.rules) && trip.rules.length > 0
+          ? trip.rules
+          : [""],
+      );
+
+      setFaqs(
+        Array.isArray(trip.faq) && trip.faq.length > 0
+          ? trip.faq.map(
+              (item: { question?: string; answer?: string }) => ({
+                question: item.question ?? "",
+                answer: item.answer ?? "",
+              }),
+            )
+          : [{ question: "", answer: "" }],
+      );
+
+      if (Array.isArray(trip.trip_itinerary)) {
+        setItinerary(
+          trip.trip_itinerary.length > 0
+            ? trip.trip_itinerary.map(
+                (item: {
+                  day_number: number;
+                  title: string;
+                  description?: string | null;
+                }) => ({
+                  day: item.day_number,
+                  title: item.title ?? "",
+                  description: item.description ?? "",
+                }),
+              )
+            : [{ day: 1, title: "", description: "" }],
+        );
+      }
+    } catch (error) {
+      console.error("Load trip error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Could not load trip.",
+      );
+    }
+  };
+
+  loadTrip();
 }, [tripId]);
 
 useEffect(() => {
@@ -486,77 +572,190 @@ useEffect(() => {
 const missingFields = validateTrip();
 const canPublish = missingFields.length === 0;
 
-  const saveDraft = () => {
-  const id =
-    tripId === "new"
-      ? `trip-${Date.now()}`
-      : tripId;
+const saveItinerary = async (
+  tripId: string,
+  accessToken: string,
+) => {
+  const validItinerary = itinerary
+    .filter(
+      (day) =>
+        day.title.trim() &&
+        day.description.trim(),
+    )
+    .map((day) => ({
+      day_number: day.day,
+      title: day.title.trim(),
+      description: day.description.trim(),
+    }));
 
-  const newTrip: SavedTrip = {
-    id,
-    status: "Draft",
+  if (validItinerary.length === 0) {
+    return;
+  }
 
-    tripName,
-    destination,
-    slug,
-    shortDescription,
-    detailedDescription,
+  for (const day of validItinerary) {
+    const response = await fetch(
+      `/api/trips/${tripId}/itinerary`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(day),
+      },
+    );
 
-    startDate,
-    endDate,
-    duration,
-    price,
-    capacity,
-    availableSeats,
+    const result = await response.json();
 
-    tripType,
-    coverImage,
-    gallery,
-
-    host,
-    pickupPoint,
-    suitableFor,
-
-    itinerary,
-
-    accommodation,
-    accommodationDescription,
-    stayLocation,
-    groupSize,
-
-    included,
-    notIncluded,
-    packingItems,
-    rules,
-
-    faqs,
-
-    cancellationPolicy,
-  };
-
-  const existingTrips = JSON.parse(
-    localStorage.getItem("chatpate-admin-trips") || "[]",
-  ) as SavedTrip[];
-
-  const tripExists = existingTrips.some(
-    (trip) => trip.id === id,
-  );
-
-  const updatedTrips = tripExists
-    ? existingTrips.map((trip) =>
-        trip.id === id ? newTrip : trip,
-      )
-    : [...existingTrips, newTrip];
-
-  localStorage.setItem(
-    "chatpate-admin-trips",
-    JSON.stringify(updatedTrips),
-  );
-
-  alert("Draft saved successfully.");
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message ||
+          `Could not save itinerary day ${day.day_number}.`,
+      );
+    }
+  }
 };
 
-const publishTrip = () => {
+  const saveDraft = async () => {
+  try {
+    setIsSaving(true);
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      alert("Please log in as an administrator.");
+      return;
+    }
+
+    const payload = {
+      title: tripName.trim(),
+      slug: slug.trim(),
+      description: detailedDescription.trim() || null,
+      short_description: shortDescription.trim() || null,
+      destination: destination.trim() || null,
+      trip_type: tripType.trim() || null,
+
+      duration_days: duration
+        ? Number(duration)
+        : null,
+
+      price: price
+        ? Number(price)
+        : null,
+
+      start_date: startDate || null,
+      end_date: endDate || null,
+
+      capacity: capacity
+        ? Number(capacity)
+        : null,
+
+      group_size: groupSize.trim() || null,
+
+      accommodation: accommodation.trim() || null,
+      accommodation_description:
+        accommodationDescription.trim() || null,
+      stay_location: stayLocation.trim() || null,
+
+      included: included
+        .map((item) => item.trim())
+        .filter(Boolean),
+
+      what_to_bring: packingItems
+        .map((item) => item.trim())
+        .filter(Boolean),
+
+      rules: rules
+        .map((item) => item.trim())
+        .filter(Boolean),
+
+      faq: faqs
+        .filter(
+          (faq) =>
+            faq.question.trim() &&
+            faq.answer.trim(),
+        )
+        .map((faq) => ({
+          question: faq.question.trim(),
+          answer: faq.answer.trim(),
+        })),
+
+      status: "draft" as const,
+
+      cover_image_url:
+        coverImage.trim() || null,
+    };
+
+    let response: Response;
+
+    if (backendTripId) {
+      response = await fetch(
+        `/api/trips/${backendTripId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(payload),
+        },
+      );
+    } else {
+      response = await fetch("/api/trips", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    const result = await response.json();
+
+if (!response.ok || !result.success) {
+  throw new Error(
+    result.message || "Failed to save trip.",
+  );
+}
+
+const savedTripId =
+  backendTripId || result.trip?.id;
+
+if (!savedTripId) {
+  throw new Error(
+    "Trip was saved but no backend trip ID was returned.",
+  );
+}
+
+if (!backendTripId && result.trip?.id) {
+  setBackendTripId(result.trip.id);
+}
+
+if (!backendTripId) {
+  await saveItinerary(
+    savedTripId,
+    session.access_token,
+  );
+}
+
+alert("Draft saved successfully.");
+  } catch (error) {
+    console.error("Save trip error:", error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Could not save trip.",
+    );
+  } finally {
+    setIsSaving(false);
+  }
+};
+
+const publishTrip = async () => {
   const missing = validateTrip();
 
   if (missing.length > 0) {
@@ -568,30 +767,101 @@ const publishTrip = () => {
     return;
   }
 
-  const id =
-    tripId === "new"
-      ? `trip-${Date.now()}`
-      : tripId;
+  if (!backendTripId) {
+    alert("Please save the trip as a draft before publishing.");
+    return;
+  }
 
-  const savedTrips = JSON.parse(
-    localStorage.getItem("chatpate-admin-trips") || "[]",
-  ) as SavedTrip[];
+  try {
+    setIsSaving(true);
 
-  const updatedTrips = savedTrips.map((trip) =>
-    trip.id === id
-      ? {
-          ...trip,
-          status: "Published" as const,
-        }
-      : trip,
-  );
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  localStorage.setItem(
-    "chatpate-admin-trips",
-    JSON.stringify(updatedTrips),
-  );
+    if (!session?.access_token) {
+      alert("Please log in as an administrator.");
+      return;
+    }
 
-  alert("Trip published successfully.");
+    const response = await fetch(`/api/trips/${backendTripId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        title: tripName.trim(),
+        slug: slug.trim(),
+        description: detailedDescription.trim() || null,
+        short_description: shortDescription.trim() || null,
+        destination: destination.trim() || null,
+        trip_type: tripType.trim() || null,
+
+        duration_days: duration ? Number(duration) : null,
+        price: price ? Number(price) : null,
+
+        start_date: startDate || null,
+        end_date: endDate || null,
+
+        capacity: capacity ? Number(capacity) : null,
+        group_size: groupSize.trim() || null,
+
+        accommodation: accommodation.trim() || null,
+        accommodation_description:
+          accommodationDescription.trim() || null,
+        stay_location: stayLocation.trim() || null,
+
+        included: included
+          .map((item) => item.trim())
+          .filter(Boolean),
+
+        what_to_bring: packingItems
+          .map((item) => item.trim())
+          .filter(Boolean),
+
+        rules: rules
+          .map((item) => item.trim())
+          .filter(Boolean),
+
+        faq: faqs
+          .filter(
+            (faq) =>
+              faq.question.trim() &&
+              faq.answer.trim(),
+          )
+          .map((faq) => ({
+            question: faq.question.trim(),
+            answer: faq.answer.trim(),
+          })),
+
+        status: "published",
+
+        cover_image_url:
+          coverImage.trim() || null,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Could not publish trip.",
+      );
+    }
+
+    alert("Trip published successfully.");
+  } catch (error) {
+    console.error("Publish trip error:", error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Could not publish trip.",
+    );
+  } finally {
+    setIsSaving(false);
+  }
 };
 
 const totalBookings = adminBookings.length;

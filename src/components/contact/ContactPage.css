@@ -309,3 +309,37 @@
     transition: none !important;
   }
 }
+
+/* =========================
+   CONTACT PAGE NAVBAR
+   ========================= */
+
+.contact-navbar .navbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #111;
+}
+
+.contact-navbar .nav-brand,
+.contact-navbar .nav-links a {
+  color: #111;
+}
+
+.contact-navbar .nav-links .nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 24px;
+  border-radius: 999px;
+  background: #111 !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.contact-navbar .nav-links .nav-cta:hover {
+  background: #222 !important;
+  color: #fff !important;
+  opacity: 1;
+}

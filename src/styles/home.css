@@ -791,6 +791,12 @@ body.menu-open {
    TRIP CARD
 ========================= */
 
+.trip-card-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
 .trip-card {
   flex: 0 0 calc((1180px - 44px) / 3);
   width: calc((1180px - 44px) / 3);

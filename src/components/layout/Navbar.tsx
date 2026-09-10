@@ -18,9 +18,6 @@ export function Navbar() {
         <li>
           <a href="/#trips">Trips</a>
         </li>
-        {/* <li>
-          <a href="/#community">Community</a>
-        </li> */}
         <li>
           <a href="/#about">About</a>
         </li>

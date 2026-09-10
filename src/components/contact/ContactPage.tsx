@@ -5,7 +5,9 @@ import "./ContactPage.css";
 export default function ContactPage() {
   return (
     <>
-      <Navbar />
+      <div className="contact-navbar">
+        <Navbar />
+      </div>
       <main className="contact-page">
       <section className="contact-section">
         <div className="contact-wrap">

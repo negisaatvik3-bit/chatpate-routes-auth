@@ -611,5 +611,29 @@ body {
   }
 }
 
+.qr-code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.qr-code img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.qr-code p {
+  margin: 0;
+  color: #6f7f7a;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
 @import "./travelweb-home.css";
 

@@ -19,14 +19,19 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TripDetailRouteImport } from './routes/trip-detail'
 import { Route as TripsRouteImport } from './routes/trips'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminTripsRouteImport } from './routes/admin.trips'
 import { Route as ApiBookingRouteImport } from './routes/api/booking'
 import { Route as ApiEnquiriesRouteImport } from './routes/api/enquiries'
 import { Route as ApiMyBookingsRouteImport } from './routes/api/my-bookings'
 import { Route as ApiTripsRouteImport } from './routes/api/trips'
+import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
+import { Route as AdminTripsIndexRouteImport } from './routes/admin.trips.index'
+import { Route as AdminTripsNewRouteImport } from './routes/admin.trips.new'
 import { Route as ApiAdminBookingsRouteImport } from './routes/api/admin/bookings'
 import { Route as ApiAdminEnquiriesRouteImport } from './routes/api/admin/enquiries'
 import { Route as ApiAdminTripsRouteImport } from './routes/api/admin/trips'
 import { Route as ApiTripsTripIdRouteImport } from './routes/api/trips/$tripId'
+import { Route as AdminTripsTripIdEditRouteImport } from './routes/admin.trips.$tripId.edit'
 import { Route as ApiAdminBookingsBookingIdRouteImport } from './routes/api/admin/bookings/$bookingId'
 import { Route as ApiAdminEnquiresEnquiryIdRouteImport } from './routes/api/admin/enquires/$enquiryId'
 import { Route as ApiAdminTripsTripIdRouteImport } from './routes/api/admin/trips/$tripId'
@@ -87,6 +92,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTripsRoute = AdminTripsRouteImport.update({
+  id: '/admin/trips',
+  path: '/admin/trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiBookingRoute = ApiBookingRouteImport.update({
   id: '/api/booking',
   path: '/api/booking',
@@ -107,6 +117,21 @@ const ApiTripsRoute = ApiTripsRouteImport.update({
   path: '/api/trips',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
+  id: '/dashboard/bookings',
+  path: '/dashboard/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTripsIndexRoute = AdminTripsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminTripsRoute,
+} as any)
+const AdminTripsNewRoute = AdminTripsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminTripsRoute,
+} as any)
 const ApiAdminBookingsRoute = ApiAdminBookingsRouteImport.update({
   id: '/api/admin/bookings',
   path: '/api/admin/bookings',
@@ -126,6 +151,11 @@ const ApiTripsTripIdRoute = ApiTripsTripIdRouteImport.update({
   id: '/$tripId',
   path: '/$tripId',
   getParentRoute: () => ApiTripsRoute,
+} as any)
+const AdminTripsTripIdEditRoute = AdminTripsTripIdEditRouteImport.update({
+  id: '/$tripId/edit',
+  path: '/$tripId/edit',
+  getParentRoute: () => AdminTripsRoute,
 } as any)
 const ApiAdminBookingsBookingIdRoute =
   ApiAdminBookingsBookingIdRouteImport.update({
@@ -190,14 +220,19 @@ export interface FileRoutesByFullPath {
   '/trip-detail': typeof TripDetailRoute
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/trips': typeof AdminTripsRouteWithChildren
   '/api/booking': typeof ApiBookingRouteWithChildren
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
   '/api/admin/trips': typeof ApiAdminTripsRouteWithChildren
   '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/admin/trips/': typeof AdminTripsIndexRoute
+  '/admin/trips/$tripId/edit': typeof AdminTripsTripIdEditRoute
   '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRouteWithChildren
   '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
   '/api/admin/trips/$tripId': typeof ApiAdminTripsTripIdRoute
@@ -223,10 +258,14 @@ export interface FileRoutesByTo {
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
   '/api/admin/trips': typeof ApiAdminTripsRouteWithChildren
   '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/admin/trips': typeof AdminTripsIndexRoute
+  '/admin/trips/$tripId/edit': typeof AdminTripsTripIdEditRoute
   '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRouteWithChildren
   '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
   '/api/admin/trips/$tripId': typeof ApiAdminTripsTripIdRoute
@@ -249,14 +288,19 @@ export interface FileRoutesById {
   '/trip-detail': typeof TripDetailRoute
   '/trips': typeof TripsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/trips': typeof AdminTripsRouteWithChildren
   '/api/booking': typeof ApiBookingRouteWithChildren
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
   '/api/admin/trips': typeof ApiAdminTripsRouteWithChildren
   '/api/trips/$tripId': typeof ApiTripsTripIdRouteWithChildren
+  '/admin/trips/': typeof AdminTripsIndexRoute
+  '/admin/trips/$tripId/edit': typeof AdminTripsTripIdEditRoute
   '/api/admin/bookings/$bookingId': typeof ApiAdminBookingsBookingIdRouteWithChildren
   '/api/admin/enquires/$enquiryId': typeof ApiAdminEnquiresEnquiryIdRoute
   '/api/admin/trips/$tripId': typeof ApiAdminTripsTripIdRoute
@@ -280,14 +324,19 @@ export interface FileRouteTypes {
     | '/trip-detail'
     | '/trips'
     | '/admin/login'
+    | '/admin/trips'
     | '/api/booking'
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/dashboard/bookings'
+    | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
     | '/api/admin/trips'
     | '/api/trips/$tripId'
+    | '/admin/trips/'
+    | '/admin/trips/$tripId/edit'
     | '/api/admin/bookings/$bookingId'
     | '/api/admin/enquires/$enquiryId'
     | '/api/admin/trips/$tripId'
@@ -313,10 +362,14 @@ export interface FileRouteTypes {
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/dashboard/bookings'
+    | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
     | '/api/admin/trips'
     | '/api/trips/$tripId'
+    | '/admin/trips'
+    | '/admin/trips/$tripId/edit'
     | '/api/admin/bookings/$bookingId'
     | '/api/admin/enquires/$enquiryId'
     | '/api/admin/trips/$tripId'
@@ -338,14 +391,19 @@ export interface FileRouteTypes {
     | '/trip-detail'
     | '/trips'
     | '/admin/login'
+    | '/admin/trips'
     | '/api/booking'
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/dashboard/bookings'
+    | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
     | '/api/admin/trips'
     | '/api/trips/$tripId'
+    | '/admin/trips/'
+    | '/admin/trips/$tripId/edit'
     | '/api/admin/bookings/$bookingId'
     | '/api/admin/enquires/$enquiryId'
     | '/api/admin/trips/$tripId'
@@ -368,10 +426,12 @@ export interface RootRouteChildren {
   TripDetailRoute: typeof TripDetailRoute
   TripsRoute: typeof TripsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminTripsRoute: typeof AdminTripsRouteWithChildren
   ApiBookingRoute: typeof ApiBookingRouteWithChildren
   ApiEnquiriesRoute: typeof ApiEnquiriesRoute
   ApiMyBookingsRoute: typeof ApiMyBookingsRoute
   ApiTripsRoute: typeof ApiTripsRouteWithChildren
+  DashboardBookingsRoute: typeof DashboardBookingsRoute
   ApiAdminBookingsRoute: typeof ApiAdminBookingsRouteWithChildren
   ApiAdminEnquiriesRoute: typeof ApiAdminEnquiriesRoute
   ApiAdminTripsRoute: typeof ApiAdminTripsRouteWithChildren
@@ -450,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/trips': {
+      id: '/admin/trips'
+      path: '/admin/trips'
+      fullPath: '/admin/trips'
+      preLoaderRoute: typeof AdminTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/booking': {
       id: '/api/booking'
       path: '/api/booking'
@@ -478,6 +545,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTripsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/bookings': {
+      id: '/dashboard/bookings'
+      path: '/dashboard/bookings'
+      fullPath: '/dashboard/bookings'
+      preLoaderRoute: typeof DashboardBookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/trips/': {
+      id: '/admin/trips/'
+      path: '/'
+      fullPath: '/admin/trips/'
+      preLoaderRoute: typeof AdminTripsIndexRouteImport
+      parentRoute: typeof AdminTripsRoute
+    }
+    '/admin/trips/new': {
+      id: '/admin/trips/new'
+      path: '/new'
+      fullPath: '/admin/trips/new'
+      preLoaderRoute: typeof AdminTripsNewRouteImport
+      parentRoute: typeof AdminTripsRoute
+    }
     '/api/admin/bookings': {
       id: '/api/admin/bookings'
       path: '/api/admin/bookings'
@@ -505,6 +593,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/trips/$tripId'
       preLoaderRoute: typeof ApiTripsTripIdRouteImport
       parentRoute: typeof ApiTripsRoute
+    }
+    '/admin/trips/$tripId/edit': {
+      id: '/admin/trips/$tripId/edit'
+      path: '/$tripId/edit'
+      fullPath: '/admin/trips/$tripId/edit'
+      preLoaderRoute: typeof AdminTripsTripIdEditRouteImport
+      parentRoute: typeof AdminTripsRoute
     }
     '/api/admin/bookings/$bookingId': {
       id: '/api/admin/bookings/$bookingId'
@@ -571,6 +666,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AdminTripsRouteChildren {
+  AdminTripsNewRoute: typeof AdminTripsNewRoute
+  AdminTripsIndexRoute: typeof AdminTripsIndexRoute
+  AdminTripsTripIdEditRoute: typeof AdminTripsTripIdEditRoute
+}
+
+const AdminTripsRouteChildren: AdminTripsRouteChildren = {
+  AdminTripsNewRoute: AdminTripsNewRoute,
+  AdminTripsIndexRoute: AdminTripsIndexRoute,
+  AdminTripsTripIdEditRoute: AdminTripsTripIdEditRoute,
+}
+
+const AdminTripsRouteWithChildren = AdminTripsRoute._addFileChildren(
+  AdminTripsRouteChildren,
+)
 
 interface ApiBookingRouteChildren {
   ApiBookingBookingIdPaymentScreenshotRoute: typeof ApiBookingBookingIdPaymentScreenshotRoute
@@ -686,10 +797,12 @@ const rootRouteChildren: RootRouteChildren = {
   TripDetailRoute: TripDetailRoute,
   TripsRoute: TripsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminTripsRoute: AdminTripsRouteWithChildren,
   ApiBookingRoute: ApiBookingRouteWithChildren,
   ApiEnquiriesRoute: ApiEnquiriesRoute,
   ApiMyBookingsRoute: ApiMyBookingsRoute,
   ApiTripsRoute: ApiTripsRouteWithChildren,
+  DashboardBookingsRoute: DashboardBookingsRoute,
   ApiAdminBookingsRoute: ApiAdminBookingsRouteWithChildren,
   ApiAdminEnquiriesRoute: ApiAdminEnquiriesRoute,
   ApiAdminTripsRoute: ApiAdminTripsRouteWithChildren,

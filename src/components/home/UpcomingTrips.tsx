@@ -9,6 +9,7 @@ import udaipurImage from "@/assets/udaipur.png";
 type BackendTrip = {
   id: string;
   title: string;
+  slug: string;
   destination: string | null;
   duration_days: number | null;
   price: number | null;
@@ -194,7 +195,7 @@ export function UpcomingTrips() {
               <Link
                 key={trip.id}
                 to="/trip-detail"
-                search={{ trip: trip.id }}
+                search={{ trip: trip.slug }}
                 className="trip-card-link"
               >
                 <article className="trip-card">

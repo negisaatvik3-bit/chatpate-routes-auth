@@ -1,35 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { getServerEnv } from "../../lib/server-env";
 
 const tripSchema = z.object({
   title: z.string().min(1, "Title is required"),
   slug: z.string().min(1, "Slug is required"),
-
   description: z.string().optional().nullable(),
   short_description: z.string().optional().nullable(),
   destination: z.string().optional().nullable(),
   trip_type: z.string().optional().nullable(),
-
   duration_days: z.number().int().positive().optional().nullable(),
   price: z.number().nonnegative().optional().nullable(),
-
   start_date: z.string().optional().nullable(),
   end_date: z.string().optional().nullable(),
-
   capacity: z.number().int().positive().optional().nullable(),
   group_size: z.string().optional().nullable(),
-
   accommodation: z.string().optional().nullable(),
   accommodation_description: z.string().optional().nullable(),
   stay_location: z.string().optional().nullable(),
-
   included: z.array(z.string()).default([]),
-
   what_to_bring: z.array(z.string()).default([]),
-
   rules: z.array(z.string()).default([]),
-
   faq: z
     .array(
       z.object({
@@ -38,22 +30,25 @@ const tripSchema = z.object({
       }),
     )
     .default([]),
-
-  status: z
-    .enum(["draft", "published", "archived"])
-    .default("draft"),
-
+  status: z.enum(["draft", "published", "archived"]).default("draft"),
   cover_image_url: z.string().url().optional().nullable(),
 });
 
-const updateTripSchema = tripSchema.partial();
-
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    getServerEnv("SUPABASE_URL") ||
+    import.meta.env["VITE_SUPABASE_URL"];
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase server environment variables are missing.");
+  const supabaseKey =
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+
+  if (!supabaseUrl) {
+    throw new Error("Missing Supabase URL configuration.");
+  }
+
+  if (!supabaseKey) {
+    throw new Error("Missing Supabase publishable key configuration.");
   }
 
   const authorization = request.headers.get("Authorization");
@@ -85,7 +80,6 @@ async function requireAdmin(request: Request) {
   }
 
   const supabase = getSupabaseClient(request);
-
   const token = authorization.replace("Bearer ", "");
 
   const {
@@ -136,19 +130,20 @@ export const Route = createFileRoute("/api/trips")({
         try {
           const supabase = getSupabaseClient(request);
 
-          const { data: trips, error } = await supabase
+          const { data, error } = await supabase
             .from("trips")
             .select("*")
             .eq("status", "published")
             .order("created_at", { ascending: false });
 
           if (error) {
-            console.error("Get trips error:", error);
+            console.error("Error fetching trips:", error);
 
             return Response.json(
               {
                 success: false,
                 message: "Could not retrieve trips.",
+                error: error.message,
               },
               { status: 500 },
             );
@@ -156,15 +151,18 @@ export const Route = createFileRoute("/api/trips")({
 
           return Response.json({
             success: true,
-            trips,
+            trips: data ?? [],
           });
         } catch (error) {
-          console.error("Trips GET error:", error);
+          console.error("GET /api/trips error:", error);
 
           return Response.json(
             {
               success: false,
-              message: "Could not retrieve trips.",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Could not retrieve trips.",
             },
             { status: 500 },
           );
@@ -173,64 +171,62 @@ export const Route = createFileRoute("/api/trips")({
 
       POST: async ({ request }) => {
         try {
-          const admin = await requireAdmin(request);
+          const auth = await requireAdmin(request);
 
-          if ("error" in admin) {
-            return admin.error;
+          if ("error" in auth) {
+            return auth.error;
           }
 
           const body = await request.json();
+          const parsed = tripSchema.safeParse(body);
 
-          const result = tripSchema.safeParse(body);
-
-          if (!result.success) {
+          if (!parsed.success) {
             return Response.json(
               {
                 success: false,
-                message: "Invalid trip details.",
-                errors: result.error.flatten().fieldErrors,
+                message: "Invalid trip data.",
+                errors: parsed.error.flatten(),
               },
               { status: 400 },
             );
           }
 
-          const { data: trip, error } = await admin.supabase
+          const { data, error } = await auth.supabase
             .from("trips")
-            .insert(result.data)
-            .select()
+            .insert(parsed.data)
+            .select("*")
             .single();
 
           if (error) {
-            console.error("Create trip error:", error);
+            console.error("Error creating trip:", error);
 
             return Response.json(
               {
                 success: false,
-                message:
-                  error.code === "23505"
-                    ? "A trip with this slug already exists."
-                    : "Could not create trip.",
+                message: "Could not create trip.",
+                error: error.message,
               },
-              {
-                status: error.code === "23505" ? 409 : 500,
-              },
+              { status: 500 },
             );
           }
 
           return Response.json(
             {
               success: true,
-              trip,
+              trip: data,
             },
             { status: 201 },
           );
         } catch (error) {
-          console.error("Trips POST error:", error);
+          console.error("POST /api/trips error:", error);
 
           return Response.json(
             {
               success: false,
-              message: "Could not create trip.",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Could not create trip.",
             },
             { status: 500 },
           );

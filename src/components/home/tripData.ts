@@ -26,7 +26,7 @@ export const trips = [
     slug: "rishikesh",
     location: "Uttarakhand, India",
     dates: "27 — 28 Sept",
-    duration: "2 Days",
+    duration: "2 Days", 
     price: "₹5,999",
     image: homeImages.rishikesh,
     alt: "Rishikesh",

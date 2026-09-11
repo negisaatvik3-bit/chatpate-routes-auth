@@ -128,20 +128,27 @@ export const Route = createFileRoute("/api/trips/$tripId")({
     handlers: {
       GET: async ({ request, params }) => {
         try {
-          const supabase = getSupabaseClient(request);
+          const supabase = getSupabaseClient(request);  
 
           const { data: trip, error } = await supabase
             .from("trips")
-            .select(`
-              *,
-              trip_images (*),
-              trip_itinerary (*)
-            `)
-            .eq("id", params.tripId)
-            .eq("status", "published")
+            .select("*")
+            .eq("slug", params.tripId)
             .single();
 
           if (error || !trip) {
+            console.error("Trip detail Supabase error:", error);
+
+            return Response.json(
+              {
+                success: false,
+                message: "Trip not found.",
+              },
+              { status: 404 },
+            );
+          }
+
+          if (trip.status !== "published") {
             return Response.json(
               {
                 success: false,

@@ -13,6 +13,7 @@ type BackendBooking = {
   status: "in_progress" | "pending" | "confirmed" | "cancelled" | "completed";
   payment_status: "pending" | "paid" | "failed" | "refunded";
   total_amount: number | null;
+  payment_screenshot_url: string | null;
   created_at: string;
 
   trip?: {
@@ -106,6 +107,51 @@ export default function AdminTripBookings({
       setLoading(false);
     }
   }
+
+  async function handleViewPaymentScreenshot(bookingId: string) {
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      window.alert("You must be logged in as an administrator.");
+      return;
+    }
+
+    const response = await fetch(
+      `/api/admin/bookings/${encodeURIComponent(
+        bookingId,
+      )}/payment-screenshot`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.screenshotUrl) {
+      throw new Error(
+        data.message || "Could not load payment screenshot.",
+      );
+    }
+
+    window.open(
+      data.screenshotUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  } catch (error) {
+    console.error("Could not load payment screenshot:", error);
+
+    window.alert(
+      error instanceof Error
+        ? error.message
+        : "Could not load payment screenshot.",
+    );
+  }
+}
 
   async function markPaymentSuccessful(bookingId: string) {
     try {
@@ -267,9 +313,21 @@ export default function AdminTripBookings({
                       </td>
 
                       <td>
-                        <span className="admin-no-screenshot">
-                          Backend upload not connected
-                        </span>
+                        {booking.payment_screenshot_url ? (
+                          <button
+                            type="button"
+                            className="admin-view-screenshot"
+                            onClick={() =>
+                              handleViewPaymentScreenshot(booking.id)
+                            }
+                          >
+                            View Screenshot
+                          </button>
+                        ) : (
+                          <span className="admin-no-screenshot">
+                            Not uploaded
+                          </span>
+                        )}
                       </td>
 
                       <td>

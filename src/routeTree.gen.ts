@@ -14,6 +14,7 @@ import { Route as BookingRouteImport } from './routes/booking'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TripDetailRouteImport } from './routes/trip-detail'
@@ -65,6 +66,11 @@ const LoginRoute = LoginRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -215,6 +221,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/trip-detail': typeof TripDetailRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/trip-detail': typeof TripDetailRoute
@@ -283,6 +291,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/trip-detail': typeof TripDetailRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy-policy'
+    | '/reset-password'
     | '/signup'
     | '/terms'
     | '/trip-detail'
@@ -353,6 +363,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy-policy'
+    | '/reset-password'
     | '/signup'
     | '/terms'
     | '/trip-detail'
@@ -386,6 +397,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/login'
     | '/privacy-policy'
+    | '/reset-password'
     | '/signup'
     | '/terms'
     | '/trip-detail'
@@ -421,6 +433,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   TripDetailRoute: typeof TripDetailRoute
@@ -473,6 +486,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
   TripDetailRoute: TripDetailRoute,

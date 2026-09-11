@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearch } from "@tanstack/react-router";
 import communityImage from "@/assets/03.jpg";
 import tripHero from "@/assets/trip.png";
 import { TripsNav } from "./TripsNav";
@@ -40,6 +41,8 @@ type Trip = {
   categories: string[];
   search: string;
   href: string;
+  startDate: string | null;
+  endDate: string | null;
 };
 
 function formatDateRange(startDate?: string | null, endDate?: string | null) {
@@ -67,6 +70,18 @@ function getMonth(date?: string | null): Month {
   if (!date) return "all";
 
   const month = new Date(date).getMonth();
+  function tripIncludesDate(trip: Trip, date: string) {
+    if (!date) return true;
+    if (!trip.startDate) return false;
+
+    const selected = new Date(`${date}T00:00:00`);
+    const start = new Date(`${trip.startDate}T00:00:00`);
+    const end = trip.endDate
+      ? new Date(`${trip.endDate}T00:00:00`)
+      : start;
+
+    return selected >= start && selected <= end;
+  }
 
   const monthMap: Record<number, Month> = {
     8: "september",
@@ -113,6 +128,8 @@ function backendTripToTrip(trip: BackendTrip): Trip {
       trip.trip_type || ""
     }`.toLowerCase(),
     href: `/trips/${trip.slug}`,
+    startDate: trip.start_date ?? null,
+    endDate: trip.end_date ?? null,
   };
 }
 
@@ -170,9 +187,36 @@ function TripCard({ trip, index }: { trip: Trip; index: number }) {
 }
 
 export function TripsPage() {
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
-  const [month, setMonth] = useState<Month>("all");
+    const { month: urlMonth, date: urlDate } = useSearch({from: "/trips",});
+    const [selectedDate, setSelectedDate] = useState(urlDate);
+    const [search, setSearch] = useState("");
+    const [filter, setFilter] = useState<Filter>("all");
+    const [month, setMonth] = useState<Month>(() => {
+    if (
+      urlMonth === "september" ||
+      urlMonth === "october" ||
+      urlMonth === "november" ||
+      urlMonth === "december"
+    ) {
+      return urlMonth;
+    }
+
+    if (urlDate) {
+      const date = new Date(`${urlDate}T00:00:00`);
+      const monthNumber = date.getMonth();
+
+      const monthMap: Record<number, Month> = {
+          8: "september",
+          9: "october",
+          10: "november",
+          11: "december",
+        };
+
+        return monthMap[monthNumber] ?? "all";
+      }
+
+      return "all";
+    });
   const [monthOpen, setMonthOpen] = useState(false);
   const monthRef = useRef<HTMLDivElement>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -223,21 +267,37 @@ export function TripsPage() {
   }, []);
 
   const visibleTrips = useMemo(() => {
-    const term = search.toLowerCase().trim();
-    return trips.filter((trip) => {
-      const matchesFilter = filter === "all" || trip.categories.includes(filter);
-      const matchesMonth = month === "all" || trip.month === month;
-      const matchesSearch = trip.search.toLowerCase().includes(term);
-      return matchesFilter && matchesMonth && matchesSearch;
-    });
-  }, [search, filter, month]);
+  const query = search.trim().toLowerCase();
+
+  return trips.filter((trip) => {
+    const matchesFilter =
+      filter === "all" || trip.categories.includes(filter);
+
+    const matchesMonth =
+      month === "all" || trip.month === month;
+
+    const matchesSearch =
+      !query || trip.search.toLowerCase().includes(query);
+
+    const matchesDate =
+      !selectedDate || tripIncludesDate(trip, selectedDate);
+
+    return (
+      matchesFilter &&
+      matchesMonth &&
+      matchesSearch &&
+      matchesDate
+    );
+  });
+}, [trips, search, filter, month, selectedDate]);
 
   const clearFilters = () => {
-    setSearch("");
-    setFilter("all");
-    setMonth("all");
-    setMonthOpen(false);
-  };
+  setSearch("");
+  setFilter("all");
+  setMonth("all");
+  setSelectedDate("");
+  setMonthOpen(false);
+};
 
   const selectedMonthLabel = monthOptions.find((option) => option.value === month)?.label ?? "All Months";
 
@@ -373,9 +433,9 @@ export function TripsPage() {
             <div className="trips-footer-link-group">
               <span>Explore</span>
               <a href="/trips">Trips</a>
-              <a href="/community">Community</a>
+              <a href="/#community">Community</a>
               <a href="/#meetups">Meetups</a>
-              <a href="/about">About</a>
+              <a href="/#about">About</a>
             </div>
             <div className="trips-footer-link-group">
               <span>Connect</span>
@@ -386,7 +446,7 @@ export function TripsPage() {
               <span>Legal</span>
               <a href="/privacy-policy">Privacy Policy</a>
               <a href="/terms">Terms &amp; Conditions</a>
-              <a href="/returns-refunds">Returns &amp; Refunds</a>
+              <a href="/terms#cancellation">Returns & Refunds</a>
             </div>
           </div>
         </div>

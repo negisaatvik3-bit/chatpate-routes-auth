@@ -56,7 +56,7 @@ export function Footer() {
 
             <Link to="/terms">Terms & Conditions</Link>
 
-            <a href="/returns-refunds">Returns & Refunds</a>
+            <a href="/terms#cancellation">Returns & Refunds</a>
           </div>
         </div>
       </div>

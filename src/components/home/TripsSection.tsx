@@ -7,7 +7,11 @@ function cardsPerView(width: number) {
   return 3;
 }
 
-export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => void }) {
+export function TripsSection({
+  onSelectTrip,
+}: {
+  onSelectTrip: (trip: Trip) => void;
+}) {
   const gridRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -16,12 +20,17 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
   const update = useCallback((nextPage: number) => {
     const grid = gridRef.current;
     if (!grid) return;
+
     const perView = cardsPerView(window.innerWidth);
     const pages = Math.max(0, Math.ceil(trips.length / perView) - 1);
+
     const card = grid.querySelector(".trip-card");
     const width = card ? card.getBoundingClientRect().width : 0;
+
     const styles = window.getComputedStyle(grid);
-    const gap = parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
+    const gap =
+      parseFloat(styles.columnGap) || parseFloat(styles.gap) || 0;
+
     const clamped = Math.min(Math.max(nextPage, 0), pages);
 
     setTotalPages(pages);
@@ -31,12 +40,16 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => update(0));
+
     const onResize = () => update(page);
+
     window.addEventListener("resize", onResize);
+
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", onResize);
     };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [update]);
 
@@ -58,6 +71,7 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
           >
             ←
           </button>
+
           <button
             type="button"
             className="trip-arrow next"
@@ -71,17 +85,43 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
       </div>
 
       <div className="trip-slider">
-        <div className="trip-grid" ref={gridRef} style={{ transform: `translateX(-${offset}px)` }}>
+        <div
+          className="trip-grid"
+          ref={gridRef}
+          style={{
+            transform: `translateX(-${offset}px)`,
+          }}
+        >
           {trips.map((trip) => (
-            <article className="trip-card" key={trip.title}>
+            <article
+              className="trip-card"
+              key={trip.title}
+              role="button"
+              tabIndex={0}
+              onClick={() => onSelectTrip(trip)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onSelectTrip(trip);
+                }
+              }}
+            >
               <div className="trip-image">
                 <span className="trip-season">{trip.dates}</span>
-                <img src={trip.image} alt={trip.alt} loading="lazy" />
+
+                <img
+                  src={trip.image}
+                  alt={trip.alt}
+                  loading="lazy"
+                />
               </div>
 
               <div className="trip-info">
                 <h3>{trip.title}</h3>
-                <div className="trip-location">{trip.location}</div>
+
+                <div className="trip-location">
+                  {trip.location}
+                </div>
 
                 <div className="trip-meta">
                   <div className="trip-meta-top">
@@ -89,6 +129,7 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
                       <span>Duration</span>
                       <strong>{trip.duration}</strong>
                     </div>
+
                     <div className="meta-item route-item">
                       <span>Dates</span>
                       <strong>{trip.dates}</strong>
@@ -96,18 +137,10 @@ export function TripsSection({ onSelectTrip }: { onSelectTrip: (trip: Trip) => v
                   </div>
 
                   <div className="trip-bottom">
-                    <a
-                      href={trip.title === "Bir × Barot Valley 2.0" ? "/trip-detail" : "#trips"}
-                      className="view-details"
-                      onClick={(e) => {
-                        if (trip.title !== "Bir × Barot Valley 2.0") {
-                          e.preventDefault();
-                          onSelectTrip(trip);
-                        }
-                      }}
-                    >
-                      Explore
-                    </a>
+                    <span className="view-details">
+                      Explore →
+                    </span>
+
                     <div className="trip-price">
                       <span>From</span>
                       <strong>{trip.price}</strong>

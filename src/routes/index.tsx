@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
-
 import "@/styles/home.css";
 import { BookingModal, type BookingDraft } from "@/components/home/BookingModal";
 import { HomeNav } from "@/components/home/HomeNav";
@@ -48,6 +47,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const navigate = useNavigate();
   const [bookingDraft, setBookingDraft] = useState<BookingDraft | null>(null);
   const closeBooking = useCallback(() => setBookingDraft(null), []);
 
@@ -57,17 +57,83 @@ function HomePage() {
 
   <main>
     <HeroSection
-      onFindTrip={(trip, travelDate) =>
-        setBookingDraft({ trip, travelDate })
-      }
+      onFindTrip={async (destination, travelDate) => {
+        try {
+          const response = await fetch("/api/trips");
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch trips");
+          }
+
+          const result = await response.json();
+
+          if (!result.success || !Array.isArray(result.trips)) {
+            throw new Error("Invalid trips response");
+          }
+
+          const allTrips = result.trips;
+
+          const normalizedDestination = destination.trim().toLowerCase();
+
+          // Find a trip where the destination matches
+          // and the selected date falls within the trip dates.
+          const matchedTrip = allTrips.find((trip: any) => {
+            const tripDestination = (
+              trip.destination || trip.title || ""
+            ).trim().toLowerCase();
+
+            const destinationMatches =
+              tripDestination === normalizedDestination ||
+              trip.title?.trim().toLowerCase() === normalizedDestination;
+
+            const dateMatches =
+              !travelDate ||
+              (
+                travelDate >= trip.start_date &&
+                travelDate <= trip.end_date
+              );
+
+            return destinationMatches && dateMatches;
+          });
+
+          if (matchedTrip) {
+            navigate({
+              to: "/trip-detail",
+              search: {
+                trip: matchedTrip.id,
+              },
+            });
+
+            return;
+          }
+
+          // No exact destination + date match yet.
+          // We will add the recommendation flow next.
+          setBookingDraft({
+            trip: destination,
+            travelDate,
+          });
+        } catch (error) {
+          console.error("Failed to find trip:", error);
+
+          setBookingDraft({
+            trip: destination,
+            travelDate,
+          });
+        }
+      }}
     />
 
     <TripsSection
       onSelectTrip={(trip) =>
-        setBookingDraft({ trip: trip.title })
+        navigate({
+          to: "/trip-detail",
+          search: {
+            trip: trip.slug,
+          },
+        })
       }
     />
-
     <WhySection />
     <FounderSection />
     <ArchivesSection />

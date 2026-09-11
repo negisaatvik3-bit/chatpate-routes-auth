@@ -63,30 +63,6 @@ function getAvailability(
   return `${capacity} spots available`;
 }
 
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(
-          new Error("Could not read payment screenshot."),
-        );
-      }
-    };
-
-    reader.onerror = () => {
-      reject(
-        new Error("Could not read payment screenshot."),
-      );
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
-
 export function BookingPage() {
   const [tripId, setTripId] = useState("");
 
@@ -293,18 +269,35 @@ export function BookingPage() {
       const returnedBookingId =
         result.bookingId || "";
 
+      if (!returnedBookingId) {
+        throw new Error("Booking was created but no booking ID was returned.");
+      }
+
       setBookingID(returnedBookingId);
 
-      /*
-       * Keep the payment screenshot locally in the
-       * browser flow for now.
-       *
-       * The current backend booking schema does not
-       * accept the screenshot itself.
-       */
-      await fileToDataUrl(
-        paymentScreenshot,
+      const screenshotFormData = new FormData();
+      screenshotFormData.append("file", paymentScreenshot);
+
+      const screenshotResponse = await fetch(
+        `/api/booking/${encodeURIComponent(returnedBookingId)}/payment-screenshot`,
+        {
+          method: "POST",
+          body: screenshotFormData,
+        },
       );
+
+      const screenshotResult =
+        await screenshotResponse.json().catch(() => null);
+
+      if (
+        !screenshotResponse.ok ||
+        !screenshotResult?.success
+      ) {
+        throw new Error(
+          screenshotResult?.message ||
+            "Booking was created, but the payment screenshot could not be uploaded.",
+        );
+      }
 
       const whatsappMessage = `Hi Chatpate Routes!
 

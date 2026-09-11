@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { supabase } from "@/integerations/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { AuthDivider } from "@/components/auth/AuthDivider";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
@@ -21,6 +22,10 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [socialError, setSocialError] = useState<string | null>(null);
 
   return (
@@ -52,14 +57,79 @@ function LoginPage() {
         <AuthDivider />
       </div>
       <LoginForm />
-      <div className="mt-3 text-center">
-        <button
-          type="button"
-          className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Forgot password?
-        </button>
-      </div>
+      <div className="mt-4">
+  <form
+    onSubmit={async (event) => {
+      event.preventDefault();
+
+      setResetMessage(null);
+      setResetError(null);
+
+      if (!resetEmail.trim()) {
+        setResetError("Please enter your email address.");
+        return;
+      }
+
+      setResetting(true);
+
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          resetEmail.trim(),
+          {
+            redirectTo: `${window.location.origin}/reset-password`,
+          },
+        );
+
+        if (error) {
+          setResetError(error.message);
+          return;
+        }
+
+        setResetMessage(
+          "Password recovery email sent. Please check your inbox.",
+        );
+      } catch (error) {
+        console.error("Password reset request error:", error);
+
+        setResetError(
+          "Unable to send the password recovery email. Please try again.",
+        );
+      } finally {
+        setResetting(false);
+      }
+    }}
+    className="space-y-3"
+  >
+    <input
+      type="email"
+      value={resetEmail}
+      onChange={(event) => setResetEmail(event.target.value)}
+      placeholder="Email for password reset"
+      autoComplete="email"
+      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-foreground"
+    />
+
+    <button
+      type="submit"
+      disabled={resetting}
+      className="w-full text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+    >
+      {resetting ? "Sending..." : "Forgot password?"}
+    </button>
+
+    {resetMessage ? (
+      <p className="text-xs text-green-600" role="status">
+        {resetMessage}
+      </p>
+    ) : null}
+
+    {resetError ? (
+      <p className="text-xs text-destructive" role="alert">
+        {resetError}
+      </p>
+    ) : null}
+  </form>
+</div>
     </AuthLayout>
   );
 }

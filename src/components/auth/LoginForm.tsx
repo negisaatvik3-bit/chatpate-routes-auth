@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { AuthInput, PasswordInput } from "./AuthInput";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { handleAdminLogin, handleLogin } from "@/lib/auth";
@@ -9,6 +10,7 @@ interface Errors {
 }
 
 export function LoginForm({ variant = "user" }: { variant?: "user" | "admin" }) {
+  const navigate = useNavigate();
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -32,6 +34,11 @@ export function LoginForm({ variant = "user" }: { variant?: "user" | "admin" }) 
     try {
       const fn = variant === "admin" ? handleAdminLogin : handleLogin;
       await fn({ email: values.email.trim(), password: values.password });
+      if (variant === "admin") {
+        navigate({ to: "/admin/trips" });
+      } else {
+        navigate({ to: "/" });
+      }
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to log in right now.");
     } finally {

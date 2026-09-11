@@ -66,7 +66,7 @@ export default function ContactPage() {
             </a>
 
             <a
-              href="https://instagram.com/chatpateroutes"
+              href="https://www.instagram.com/chatpate.routes.in/?hl=en"
               className="contact-option instagram"
               target="_blank"
               rel="noopener noreferrer"

@@ -88,7 +88,7 @@ export const Route = createFileRoute("/api/booking")({
             bookingId: result.data.bookingId ?? crypto.randomUUID(),
           };
 
-          console.log("Valid booking received:", booking.bookingId);
+
 
           const supabase = getSupabaseClient(request);
 
@@ -258,7 +258,7 @@ export const Route = createFileRoute("/api/booking")({
             );
           }
 
-          console.log("Booking saved to Supabase:", savedBooking.id);
+
 
           /*
            * Keep the existing Google Sheets integration.

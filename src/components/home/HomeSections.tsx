@@ -1,6 +1,16 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { homeImages } from "./images";
-import { trips, type Trip } from "./tripData";
+
+type BackendTrip = {
+  id: string;
+  title: string;
+  destination: string;
+  start_date: string;
+  end_date: string;
+  duration_days: number;
+  price: number;
+  cover_image_url?: string | null;
+};
 
 export function HeroSection({
   onFindTrip,
@@ -12,42 +22,95 @@ export function HeroSection({
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
 
+  const [backendTrips, setBackendTrips] = useState<BackendTrip[]>([]);
+  const [tripsLoading, setTripsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTrips = async () => {
+      try {
+        const response = await fetch("/api/trips");
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch trips");
+        }
+
+        const result = await response.json();
+
+        if (result.success && Array.isArray(result.trips)) {
+          setBackendTrips(result.trips);
+        }
+      } catch (error) {
+        console.error("Failed to load trips:", error);
+      } finally {
+        setTripsLoading(false);
+      }
+    };
+
+    loadTrips();
+  }, []);
+
   const suggestions = useMemo(() => {
-    const query = destination.trim().toLowerCase();
+  const query = destination.trim().toLowerCase();
+
     if (!query) return [];
 
-    return trips.filter((trip) =>
-      `${trip.title} ${trip.location}`.toLowerCase().includes(query),
+    return backendTrips.filter((trip) =>
+      `${trip.title} ${trip.destination}`
+        .toLowerCase()
+        .includes(query),
     );
-  }, [destination]);
+  }, [destination, backendTrips]);
 
-  const selectSuggestion = (trip: Trip) => {
+  const selectSuggestion = (trip: BackendTrip) => {
     setDestination(trip.title);
     setSuggestionsOpen(false);
     setHighlightedSuggestion(-1);
   };
-
-  const handleDestinationKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleDestinationKeyDown = (
+    event: KeyboardEvent<HTMLInputElement>
+  ) => {
     if (!suggestionsOpen || suggestions.length === 0) {
-      if (event.key === "Escape") setSuggestionsOpen(false);
+      if (event.key === "Escape") {
+        setSuggestionsOpen(false);
+      }
+
       return;
     }
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setHighlightedSuggestion((current) => (current + 1) % suggestions.length);
+
+      setHighlightedSuggestion(
+        (current) => (current + 1) % suggestions.length
+      );
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
+
       setHighlightedSuggestion(
-        (current) => (current <= 0 ? suggestions.length - 1 : current - 1),
+        (current) =>
+          current <= 0 ? suggestions.length - 1 : current - 1
       );
     } else if (event.key === "Enter" && highlightedSuggestion >= 0) {
       event.preventDefault();
+
       const suggestion = suggestions[highlightedSuggestion];
-      if (suggestion) selectSuggestion(suggestion);
+
+      if (suggestion) {
+        selectSuggestion(suggestion);
+      }
     } else if (event.key === "Escape") {
       setSuggestionsOpen(false);
     }
+  };
+
+  const handleFindTrip = () => {
+    const trimmedDestination = destination.trim();
+
+    if (!trimmedDestination) {
+      return;
+    }
+
+    onFindTrip(trimmedDestination, travelDate);
   };
 
   return (
@@ -70,6 +133,7 @@ export function HeroSection({
         <div className="hero-search active">
           <div className="search-field destination-field">
             <label htmlFor="destinationInput">Destination</label>
+
             <input
               type="text"
               id="destinationInput"
@@ -77,10 +141,14 @@ export function HeroSection({
               value={destination}
               role="combobox"
               aria-autocomplete="list"
-              aria-expanded={suggestionsOpen && destination.trim().length > 0}
+              aria-expanded={
+                suggestionsOpen && destination.trim().length > 0
+              }
               aria-controls="destinationSuggestions"
               onFocus={() => {
-                if (destination.trim()) setSuggestionsOpen(true);
+                if (destination.trim()) {
+                  setSuggestionsOpen(true);
+                }
               }}
               onChange={(event) => {
                 setDestination(event.target.value);
@@ -91,7 +159,11 @@ export function HeroSection({
             />
 
             {suggestionsOpen && destination.trim() ? (
-              <div className="destination-suggestions" id="destinationSuggestions" role="listbox">
+              <div
+                className="destination-suggestions"
+                id="destinationSuggestions"
+                role="listbox"
+              >
                 {suggestions.length > 0 ? (
                   suggestions.map((trip, index) => (
                     <button
@@ -100,20 +172,35 @@ export function HeroSection({
                       role="option"
                       aria-selected={highlightedSuggestion === index}
                       className={`destination-suggestion${
-                        highlightedSuggestion === index ? " highlighted" : ""
+                        highlightedSuggestion === index
+                          ? " highlighted"
+                          : ""
                       }`}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => selectSuggestion(trip)}
                     >
-                      <span className="destination-suggestion-title">{trip.title}</span>
+                      <span className="destination-suggestion-title">
+                        {trip.title}
+                      </span>
+
                       <span className="destination-suggestion-meta">
-                        {trip.location} · Upcoming: {trip.dates}
+                        {trip.destination} · Upcoming:{" "}
+                        {new Date(trip.start_date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                        {" — "}
+                        {new Date(trip.end_date).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                        })}
                       </span>
                     </button>
                   ))
                 ) : (
                   <p className="destination-suggestion-empty">
-                    No scheduled trip matches yet. You can still send us an enquiry for this place.
+                    No scheduled trip matches yet. You can still send us an
+                    enquiry for this place.
                   </p>
                 )}
               </div>
@@ -126,12 +213,18 @@ export function HeroSection({
             className="search-field date-field"
             onClick={() => {
               const el = document.getElementById("dateInput") as
-                (HTMLInputElement & { showPicker?: () => void }) | null;
-              if (el?.showPicker) el.showPicker();
-              else el?.focus();
+                | (HTMLInputElement & { showPicker?: () => void })
+                | null;
+
+              if (el?.showPicker) {
+                el.showPicker();
+              } else {
+                el?.focus();
+              }
             }}
           >
             <label htmlFor="dateInput">When</label>
+
             <input
               type="date"
               id="dateInput"
@@ -143,9 +236,7 @@ export function HeroSection({
           <button
             className="search-submit"
             type="button"
-            onClick={() => {
-              onFindTrip(destination, travelDate);
-            }}
+            onClick={handleFindTrip}
           >
             Find My Trip
           </button>
@@ -527,7 +618,7 @@ export function SiteFooter() {
             <span>Legal</span>
             <a href="/privacy-policy">Privacy Policy</a>
             <a href="/terms">Terms &amp; Conditions</a>
-            <a href="/returns-refunds">Returns &amp; Refunds</a>
+            <a href="/terms#cancellation">Returns & Refunds</a>
           </div>
         </div>
       </div>

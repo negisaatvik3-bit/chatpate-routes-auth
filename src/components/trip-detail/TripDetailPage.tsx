@@ -300,7 +300,7 @@ export function TripDetailPage() {
           </li>
 
           <li>
-            <a href="/about">About</a>
+            <a href="/#about">About</a>
           </li>
 
           <li>
@@ -350,7 +350,7 @@ export function TripDetailPage() {
           </a>
 
           <a
-            href="/about"
+            href="/#about"
             onClick={() => setMenuOpen(false)}
           >
             <span>02</span> About

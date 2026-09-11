@@ -15,12 +15,17 @@ type BackendTrip = {
 export function HeroSection({
   onFindTrip,
 }: {
-  onFindTrip: (destination: string, travelDate: string) => void;
+  onFindTrip: (
+    destination: string,
+    travelDate: string,
+    selectedTrip?: BackendTrip,
+  ) => void;
 }) {
   const [destination, setDestination] = useState("");
   const [travelDate, setTravelDate] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
+  const [selectedTrip, setSelectedTrip] = useState<BackendTrip | null>(null);
 
   const [backendTrips, setBackendTrips] = useState<BackendTrip[]>([]);
   const [tripsLoading, setTripsLoading] = useState(true);
@@ -63,6 +68,7 @@ export function HeroSection({
 
   const selectSuggestion = (trip: BackendTrip) => {
     setDestination(trip.title);
+    setSelectedTrip(trip);
     setSuggestionsOpen(false);
     setHighlightedSuggestion(-1);
   };
@@ -110,7 +116,7 @@ export function HeroSection({
       return;
     }
 
-    onFindTrip(trimmedDestination, travelDate);
+    onFindTrip(trimmedDestination, travelDate, selectedTrip ?? undefined);
   };
 
   return (
@@ -152,6 +158,7 @@ export function HeroSection({
               }}
               onChange={(event) => {
                 setDestination(event.target.value);
+                setSelectedTrip(null);
                 setSuggestionsOpen(true);
                 setHighlightedSuggestion(-1);
               }}

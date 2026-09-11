@@ -111,6 +111,22 @@
   color: #9ca3af;
 }
 
+.admin-booking-refresh {
+  padding: 8px 12px;
+  border: 1px solid var(--admin-blue, #007ea7);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--admin-blue, #007ea7);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.admin-booking-refresh:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
 /* =========================
    TABLE
 ========================= */
@@ -203,32 +219,25 @@
   color: #111827;
 }
 
-/* =========================
-   PAYMENT SCREENSHOT
-========================= */
-
-.admin-payment-screenshot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 7px 10px;
+.admin-booking-select {
+  min-width: 112px;
+  padding: 7px 8px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  color: #374151;
   background: #ffffff;
-  text-decoration: none;
+  color: #374151;
   font-size: 12px;
-  font-weight: 600;
+}
+
+.admin-booking-select:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.admin-booking-updated {
+  color: #6b7280;
+  font-size: 11px;
   white-space: nowrap;
-}
-
-.admin-payment-screenshot:hover {
-  background: #f9fafb;
-}
-
-.admin-no-screenshot {
-  color: #9ca3af;
-  font-size: 12px;
 }
 
 /* =========================
@@ -395,17 +404,4 @@
 
 .admin-payment-success:hover {
   background: var(--admin-blue-dark);
-}
-
-
-/* Screenshot button */
-.admin-payment-screenshot {
-  color: var(--admin-blue);
-  border-color: var(--admin-blue);
-}
-
-
-.admin-payment-screenshot:hover {
-  background: var(--admin-blue-light);
-  color: var(--admin-blue-dark);
 }

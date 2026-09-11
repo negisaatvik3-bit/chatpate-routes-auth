@@ -250,6 +250,8 @@ export function TripDetailPage() {
   const whatsappUrl = `https://wa.me/919266770149?text=${encodeURIComponent(
     `Hi Chatpate Routes, I'm interested in ${tripData.title}.`
   )}`;
+  const bookingPath = `/booking?trip=${encodeURIComponent(tripData.id)}`;
+  const loginBookingPath = `/login?redirect=${encodeURIComponent(bookingPath)}`;
 
   const itinerary =
     tripData.trip_itinerary?.length
@@ -280,9 +282,7 @@ export function TripDetailPage() {
 
         <a
           className="trip-mobile-book-btn"
-          href={`/booking?trip=${encodeURIComponent(
-            tripData.id
-          )}`}
+          href={loginBookingPath}
         >
           Book Now →
         </a>
@@ -897,9 +897,7 @@ export function TripDetailPage() {
 
                 <a
                   className="trip-detail-book-btn"
-                  href={`/booking?trip=${encodeURIComponent(
-                    tripData.id
-                  )}`}
+                  href={loginBookingPath}
                 >
                   Book Now →
                 </a>

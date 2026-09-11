@@ -129,6 +129,16 @@ export const Route = createFileRoute("/api/trips/$tripId/images")({
             );
           }
 
+          if (file.size > 8 * 1024 * 1024) {
+            return Response.json(
+              {
+                success: false,
+                message: "Image must be 8 MB or smaller after optimization.",
+              },
+              { status: 413 },
+            );
+          }
+
           // Only allow image files
           if (!file.type.startsWith("image/")) {
             return Response.json(

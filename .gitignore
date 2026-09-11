@@ -33,3 +33,4 @@ dist-ssr
 google-service-account.json
 .env.local
 .env
+INTERNAL-TRAVEL-WEBSITE-SCOPE.md

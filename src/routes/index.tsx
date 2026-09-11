@@ -12,7 +12,7 @@ import {
   ItinerarySection,
   SiteFooter,
 } from "@/components/home/HomeSections";
-import { TripsSection } from "@/components/home/TripsSection";
+import { UpcomingTrips } from "@/components/home/UpcomingTrips";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,11 +53,11 @@ function HomePage() {
 
   return (
 <div className="home-page">
-  <HomeNav onJoinTrip={() => setBookingDraft({})} />
+  <HomeNav />
 
   <main>
     <HeroSection
-      onFindTrip={async (destination, travelDate) => {
+      onFindTrip={async (destination, travelDate, selectedTrip) => {
         try {
           const response = await fetch("/api/trips");
 
@@ -77,14 +77,18 @@ function HomePage() {
 
           // Find a trip where the destination matches
           // and the selected date falls within the trip dates.
-          const matchedTrip = allTrips.find((trip: any) => {
+          const selectedTripMatch = selectedTrip
+            ? allTrips.find((trip: any) => trip.id === selectedTrip.id)
+            : null;
+
+          const matchedTrip = selectedTripMatch || allTrips.find((trip: any) => {
             const tripDestination = (
               trip.destination || trip.title || ""
             ).trim().toLowerCase();
 
             const destinationMatches =
-              tripDestination === normalizedDestination ||
-              trip.title?.trim().toLowerCase() === normalizedDestination;
+              tripDestination.includes(normalizedDestination) ||
+              trip.title?.trim().toLowerCase().includes(normalizedDestination);
 
             const dateMatches =
               !travelDate ||
@@ -94,6 +98,15 @@ function HomePage() {
               );
 
             return destinationMatches && dateMatches;
+          }) || allTrips.find((trip: any) => {
+            const tripDestination = (
+              trip.destination || trip.title || ""
+            ).trim().toLowerCase();
+
+            return (
+              tripDestination.includes(normalizedDestination) ||
+              trip.title?.trim().toLowerCase().includes(normalizedDestination)
+            );
           });
 
           if (matchedTrip) {
@@ -124,16 +137,7 @@ function HomePage() {
       }}
     />
 
-    <TripsSection
-      onSelectTrip={(trip) =>
-        navigate({
-          to: "/trip-detail",
-          search: {
-            trip: trip.slug,
-          },
-        })
-      }
-    />
+    <UpcomingTrips />
     <WhySection />
     <FounderSection />
     <ArchivesSection />

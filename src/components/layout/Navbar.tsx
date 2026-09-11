@@ -16,7 +16,7 @@ export function Navbar() {
       {/* Desktop Navigation */}
       <ul className="nav-links">
         <li>
-          <a href="/#trips">Trips</a>
+          <a href="/trips">Trips</a>
         </li>
         <li>
           <a href="/#about">About</a>
@@ -25,7 +25,7 @@ export function Navbar() {
           <a href="/contact">Contact</a>
         </li>
         <li>
-          <a href="/#trips" className="nav-cta">
+          <a href="/login?redirect=%2Ftrips" className="nav-cta">
             Join Trip
           </a>
         </li>
@@ -48,7 +48,7 @@ export function Navbar() {
       {isMenuOpen && (
         <ul className="mobile-nav-links">
           <li>
-            <a href="/#trips" onClick={closeMenu}>
+            <a href="/trips" onClick={closeMenu}>
               Trips
             </a>
           </li>
@@ -68,7 +68,7 @@ export function Navbar() {
             </a>
           </li>
           <li>
-            <a href="/#trips" className="nav-cta" onClick={closeMenu}>
+            <a href="/login?redirect=%2Ftrips" className="nav-cta" onClick={closeMenu}>
               Join Trip
             </a>
           </li>

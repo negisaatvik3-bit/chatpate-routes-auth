@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../../integerations/supabase/client";
 import "./admin-trip-editor.css";
-import AdminTripBookings from "./AdminTripBookings";
+import AdminTripBookings, {
+  type BookingStats,
+} from "./AdminTripBookings";
 
 type Section =
   | "overview"
@@ -22,6 +24,13 @@ type ItineraryDay = {
 type FAQ = {
   question: string;
   answer: string;
+};
+
+type TripImage = {
+  id: string;
+  image_url: string;
+  is_cover: boolean;
+  display_order: number;
 };
 
 type AdminTripEditorProps = {
@@ -70,19 +79,48 @@ type SavedTrip = {
   cancellationPolicy: string;
 };
 
-type AdminBooking = {
-  bookingId: string;
-  tripSlug: string;
-  travellers: number;
-  totalAmount: number;
-  advanceAmount: number;
-  paymentStatus: "Pending" | "Submitted" | "Paid" | "Failed";
-  bookingStatus:
-    | "Pending"
-    | "Confirmed"
-    | "Cancelled"
-    | "Completed";
-};
+const MAX_IMAGE_UPLOAD_BYTES = 8 * 1024 * 1024;
+const MAX_IMAGE_DIMENSION = 2400;
+
+async function optimizeImage(file: File) {
+  if (typeof createImageBitmap === "undefined") {
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(
+    1,
+    MAX_IMAGE_DIMENSION / bitmap.width,
+    MAX_IMAGE_DIMENSION / bitmap.height,
+  );
+
+  if (scale === 1 && file.size <= MAX_IMAGE_UPLOAD_BYTES) {
+    bitmap.close();
+    return file;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    return file;
+  }
+
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/webp", 0.82),
+  );
+
+  if (!blob) return file;
+
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "trip-image";
+  return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+}
 
 const sections: { id: Section; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -104,7 +142,16 @@ export default function AdminTripEditor({
   tripId === "new" ? null : tripId,
   );
   const [isSaving, setIsSaving] = useState(false);
-  const [adminBookings, setAdminBookings] = useState<AdminBooking[]>([]);
+  const [tripImages, setTripImages] = useState<TripImage[]>([]);
+  const [makeCoverOnUpload, setMakeCoverOnUpload] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [bookingStats, setBookingStats] = useState<BookingStats>({
+    totalBookings: 0,
+    pendingPayments: 0,
+    confirmedBookings: 0,
+    advanceCollected: 0,
+  });
 
   const [tripName, setTripName] = useState("");
   const [destination, setDestination] = useState("");
@@ -219,6 +266,10 @@ useEffect(() => {
       );
 
       setTripType(trip.trip_type ?? "");
+      setCoverImage(trip.cover_image_url ?? "");
+      setTripImages(
+        Array.isArray(trip.trip_images) ? (trip.trip_images as TripImage[]) : [],
+      );
 
       setAccommodation(trip.accommodation ?? "");
       setAccommodationDescription(
@@ -287,34 +338,197 @@ useEffect(() => {
   loadTrip();
 }, [tripId]);
 
-useEffect(() => {
-  const loadBookings = () => {
-    try {
-      const storedBookings = JSON.parse(
-        localStorage.getItem("chatpate_routes_bookings") || "[]",
-      ) as AdminBooking[];
+  const handleImageUpload = async (file: File, isCover: boolean) => {
+    if (!backendTripId) {
+      setImageUploadError("Save this trip first, then upload its images.");
+      return;
+    }
 
-      const tripBookings = storedBookings.filter(
-        (booking) =>
-          booking.tripSlug === tripId ||
-          booking.tripSlug === slug,
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setImageUploadError("Please choose a JPG, PNG, or WebP image.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImageUploadError("");
+
+    try {
+      const optimizedFile = await optimizeImage(file);
+
+      if (optimizedFile.size > MAX_IMAGE_UPLOAD_BYTES) {
+        throw new Error("This image is still too large. Please choose a smaller image.");
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("Please log in as an administrator.");
+      }
+
+      const formData = new FormData();
+      formData.append("file", optimizedFile);
+      formData.append("is_cover", String(isCover));
+      formData.append("display_order", String(tripImages.length));
+
+      const response = await fetch(`/api/trips/${backendTripId}/images`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.image) {
+        throw new Error(result.message || "Could not upload image.");
+      }
+
+      const uploadedImage = result.image as TripImage;
+      setTripImages((current) =>
+        [...current.filter((image) => !isCover || !image.is_cover), uploadedImage].sort(
+          (a, b) => a.display_order - b.display_order,
+        ),
       );
 
-      setAdminBookings(tripBookings);
+      if (isCover) {
+        setCoverImage(uploadedImage.image_url);
+        await fetch(`/api/trips/${backendTripId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ cover_image_url: uploadedImage.image_url }),
+        });
+      }
     } catch (error) {
-      console.error("Could not load bookings:", error);
-      setAdminBookings([]);
+      console.error("Trip image upload error:", error);
+      setImageUploadError(
+        error instanceof Error ? error.message : "Could not upload image.",
+      );
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
-  loadBookings();
+  const handleDeleteImage = async (image: TripImage) => {
+    if (!backendTripId) return;
+    if (!window.confirm("Delete this trip image?")) return;
 
-  window.addEventListener("storage", loadBookings);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-  return () => {
-    window.removeEventListener("storage", loadBookings);
+      if (!session?.access_token) {
+        throw new Error("Please log in as an administrator.");
+      }
+
+      const response = await fetch(
+        `/api/trips/${backendTripId}/images/${encodeURIComponent(image.id)}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        },
+      );
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Could not delete image.");
+      }
+
+      setTripImages((current) => current.filter((item) => item.id !== image.id));
+      if (coverImage === image.image_url) {
+        setCoverImage("");
+
+        await fetch(`/api/trips/${backendTripId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ cover_image_url: null }),
+        });
+      }
+    } catch (error) {
+      console.error("Trip image delete error:", error);
+      setImageUploadError(
+        error instanceof Error ? error.message : "Could not delete image.",
+      );
+    }
   };
-}, [tripId, slug]);
+
+  const handleReorderImage = async (index: number, direction: -1 | 1) => {
+    if (!backendTripId) return;
+
+    const nextIndex = index + direction;
+    const currentImage = tripImages[index];
+    const nextImage = tripImages[nextIndex];
+
+    if (!currentImage || !nextImage) return;
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("Please log in as an administrator.");
+      }
+
+      const response = await Promise.all(
+        [
+          [currentImage, nextImage.display_order],
+          [nextImage, currentImage.display_order],
+        ].map(([image, displayOrder]) =>
+          fetch(
+            `/api/trips/${backendTripId}/images/${encodeURIComponent(
+              (image as TripImage).id,
+            )}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ display_order: displayOrder }),
+            },
+          ),
+        ),
+      );
+
+      const results = await Promise.all(response.map((item) => item.json()));
+
+      if (response.some((item) => !item.ok) || results.some((item) => !item.success)) {
+        throw new Error("Could not update image order.");
+      }
+
+      setTripImages((current) => {
+        const reordered = [...current];
+        const movingImage = reordered[index];
+        const targetImage = reordered[nextIndex];
+
+        if (!movingImage || !targetImage) return current;
+
+        reordered[index] = targetImage;
+        reordered[nextIndex] = movingImage;
+
+        return reordered.map((image, imageIndex) => ({
+          ...image,
+          display_order: imageIndex,
+        }));
+      });
+    } catch (error) {
+      console.error("Trip image reorder error:", error);
+      setImageUploadError(
+        error instanceof Error ? error.message : "Could not update image order.",
+      );
+    }
+  };
 
   const addItineraryDay = () => {
     setItinerary((current) => [
@@ -864,26 +1078,6 @@ const publishTrip = async () => {
   }
 };
 
-const totalBookings = adminBookings.length;
-
-const pendingPayments = adminBookings.filter(
-  (booking) =>
-    booking.paymentStatus === "Pending" ||
-    booking.paymentStatus === "Submitted",
-).length;
-
-const confirmedBookings = adminBookings.filter(
-  (booking) => booking.bookingStatus === "Confirmed",
-).length;
-
-const advanceCollected = adminBookings
-  .filter((booking) => booking.paymentStatus === "Paid")
-  .reduce(
-    (total, booking) =>
-      total + Number(booking.advanceAmount || 0),
-    0,
-  );
-
   return (
     <main className="admin-trip-editor-page">
       <div className="admin-trip-editor-container">
@@ -957,7 +1151,7 @@ const advanceCollected = adminBookings
         </span>
 
         <strong className="admin-booking-stat-value">
-          {totalBookings}
+          {bookingStats.totalBookings}
         </strong>
       </div>
 
@@ -973,7 +1167,7 @@ const advanceCollected = adminBookings
         </span>
 
         <strong className="admin-booking-stat-value">
-          {pendingPayments}
+          {bookingStats.pendingPayments}
         </strong>
       </div>
 
@@ -989,7 +1183,7 @@ const advanceCollected = adminBookings
         </span>
 
         <strong className="admin-booking-stat-value">
-          {confirmedBookings}
+          {bookingStats.confirmedBookings}
         </strong>
       </div>
 
@@ -1005,7 +1199,7 @@ const advanceCollected = adminBookings
         </span>
 
         <strong className="admin-booking-stat-value">
-          ₹{advanceCollected.toLocaleString("en-IN")}
+          ₹{bookingStats.advanceCollected.toLocaleString("en-IN")}
         </strong>
       </div>
 
@@ -1275,6 +1469,105 @@ const advanceCollected = adminBookings
                       rows={3}
                       placeholder="Add image URLs separated by commas..."
                     />
+                  </div>
+
+                  <div className="admin-form-field full admin-image-manager">
+                    <label>Trip Images</label>
+                    <p className="admin-image-help">
+                      Upload JPG, PNG, or WebP images. Large files are resized automatically
+                      and uploads are limited to 8 MB after optimization.
+                    </p>
+
+                    <div className="admin-image-upload-row">
+                      <label className="admin-image-upload-button">
+                        {isUploadingImage ? "Optimizing..." : "Upload Image"}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={isUploadingImage || !backendTripId}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.currentTarget.value = "";
+                            if (file) {
+                              handleImageUpload(file, makeCoverOnUpload);
+                            }
+                          }}
+                        />
+                      </label>
+
+                      <label className="admin-cover-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={makeCoverOnUpload}
+                          onChange={(event) =>
+                            setMakeCoverOnUpload(event.target.checked)
+                          }
+                        />
+                        Use as cover image
+                      </label>
+                    </div>
+
+                    {!backendTripId ? (
+                      <small>Save the trip before uploading images.</small>
+                    ) : null}
+
+                    {imageUploadError ? (
+                      <p className="admin-image-error" role="alert">
+                        {imageUploadError}
+                      </p>
+                    ) : null}
+
+                    {tripImages.length > 0 ? (
+                      <div className="admin-image-grid">
+                        {tripImages.map((image) => (
+                          <div className="admin-image-card" key={image.id}>
+                            <img src={image.image_url} alt="Trip upload" />
+                            <div className="admin-image-card-footer">
+                              <span>
+                                {image.is_cover ? "Cover image" : `Image ${image.display_order + 1}`}
+                              </span>
+                              <div className="admin-image-card-actions">
+                                <button
+                                  type="button"
+                                  className="admin-image-order"
+                                  disabled={image.display_order === 0}
+                                  onClick={() =>
+                                    handleReorderImage(
+                                      tripImages.findIndex((item) => item.id === image.id),
+                                      -1,
+                                    )
+                                  }
+                                  aria-label="Move image up"
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  type="button"
+                                  className="admin-image-order"
+                                  disabled={image.display_order === tripImages.length - 1}
+                                  onClick={() =>
+                                    handleReorderImage(
+                                      tripImages.findIndex((item) => item.id === image.id),
+                                      1,
+                                    )
+                                  }
+                                  aria-label="Move image down"
+                                >
+                                  ↓
+                                </button>
+                              <button
+                                type="button"
+                                className="admin-image-delete"
+                                onClick={() => handleDeleteImage(image)}
+                              >
+                                Delete
+                              </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="admin-form-field">
@@ -1762,6 +2055,7 @@ const advanceCollected = adminBookings
                 <AdminTripBookings
                 tripId={tripId}
                 tripPrice={Number(price) || 8999}
+                onStatsChange={setBookingStats}
                 />
             </section>
             )}

@@ -87,6 +87,59 @@ export const Route = createFileRoute(
 )({
   server: {
     handlers: {
+      PATCH: async ({ request, params }) => {
+        try {
+          const admin = await requireAdmin(request);
+
+          if ("error" in admin) {
+            return admin.error;
+          }
+
+          const body = await request.json();
+          const displayOrder = Number(body.display_order);
+
+          if (!Number.isInteger(displayOrder) || displayOrder < 0) {
+            return Response.json(
+              {
+                success: false,
+                message: "A valid image order is required.",
+              },
+              { status: 400 },
+            );
+          }
+
+          const { data: image, error } = await admin.supabase
+            .from("trip_images")
+            .update({ display_order: displayOrder })
+            .eq("id", params.imageId)
+            .eq("trip_id", params.tripId)
+            .select()
+            .single();
+
+          if (error || !image) {
+            return Response.json(
+              {
+                success: false,
+                message: "Could not update image order.",
+              },
+              { status: 500 },
+            );
+          }
+
+          return Response.json({ success: true, image });
+        } catch (error) {
+          console.error("Trip image PATCH error:", error);
+
+          return Response.json(
+            {
+              success: false,
+              message: "Could not update image order.",
+            },
+            { status: 500 },
+          );
+        }
+      },
+
       DELETE: async ({ request, params }) => {
         try {
           const admin = await requireAdmin(request);

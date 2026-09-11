@@ -37,7 +37,15 @@ export function LoginForm({ variant = "user" }: { variant?: "user" | "admin" }) 
       if (variant === "admin") {
         navigate({ to: "/admin/trips" });
       } else {
-        navigate({ to: "/" });
+        const redirect = new URLSearchParams(window.location.search).get(
+          "redirect",
+        );
+        const destination =
+          redirect && redirect.startsWith("/") && !redirect.startsWith("//")
+            ? redirect
+            : "/";
+
+        window.location.assign(destination);
       }
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to log in right now.");

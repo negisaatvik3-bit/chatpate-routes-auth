@@ -70,18 +70,6 @@ function getMonth(date?: string | null): Month {
   if (!date) return "all";
 
   const month = new Date(date).getMonth();
-  function tripIncludesDate(trip: Trip, date: string) {
-    if (!date) return true;
-    if (!trip.startDate) return false;
-
-    const selected = new Date(`${date}T00:00:00`);
-    const start = new Date(`${trip.startDate}T00:00:00`);
-    const end = trip.endDate
-      ? new Date(`${trip.endDate}T00:00:00`)
-      : start;
-
-    return selected >= start && selected <= end;
-  }
 
   const monthMap: Record<number, Month> = {
     8: "september",
@@ -91,6 +79,19 @@ function getMonth(date?: string | null): Month {
   };
 
   return monthMap[month] ?? "all";
+}
+
+function tripIncludesDate(trip: Trip, date: string) {
+  if (!date) return true;
+  if (!trip.startDate) return false;
+
+  const selected = new Date(`${date}T00:00:00`);
+  const start = new Date(`${trip.startDate}T00:00:00`);
+  const end = trip.endDate
+    ? new Date(`${trip.endDate}T00:00:00`)
+    : start;
+
+  return selected >= start && selected <= end;
 }
 
 function formatPrice(price?: number | null) {

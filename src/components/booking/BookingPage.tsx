@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import "./booking.css";
 import QRCode from "../common/QRCode";
+import { supabase } from "@/integerations/supabase/client";
 
 const WHATSAPP_NUMBER = "919266770149";
 
@@ -75,6 +76,8 @@ export function BookingPage() {
   const [tripError, setTripError] =
     useState("");
 
+  const [authChecked, setAuthChecked] = useState(false);
+
   const [travellers, setTravellers] =
     useState("1");
 
@@ -99,8 +102,34 @@ export function BookingPage() {
   const [bookingID, setBookingID] =
     useState("");
 
-  const [paymentScreenshot, setPaymentScreenshot] =
-    useState<File | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const checkAuthentication = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!active) return;
+
+      if (!session?.access_token) {
+        const redirect = `${window.location.pathname}${window.location.search}`;
+        window.location.replace(
+          `/login?redirect=${encodeURIComponent(redirect)}`,
+        );
+        return;
+      }
+
+      setAuthChecked(true);
+    };
+
+    checkAuthentication();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   /*
    * Load the selected trip from the backend.
@@ -207,13 +236,6 @@ export function BookingPage() {
       return;
     }
 
-    if (!paymentScreenshot) {
-      window.alert(
-        "Please upload your payment screenshot.",
-      );
-      return;
-    }
-
     if (!tripId) {
       window.alert(
         "No trip was selected.",
@@ -231,6 +253,18 @@ export function BookingPage() {
     setSubmitting(true);
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        const redirect = `${window.location.pathname}${window.location.search}`;
+        window.location.replace(
+          `/login?redirect=${encodeURIComponent(redirect)}`,
+        );
+        return;
+      }
+
       /*
        * The backend generates the booking ID if one
        * isn't supplied, so we don't need to generate
@@ -243,6 +277,7 @@ export function BookingPage() {
           headers: {
             "Content-Type":
               "application/json",
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             name: name.trim(),
@@ -251,7 +286,14 @@ export function BookingPage() {
             trip: tripId,
             travelDate: trip.start_date,
             travellers: travellerCount,
-            message: message.trim(),
+            message: [
+              travellerNames.trim()
+                ? `Traveller names: ${travellerNames.trim()}`
+                : "",
+              message.trim(),
+            ]
+              .filter(Boolean)
+              .join("\n\n"),
           }),
         },
       );
@@ -274,30 +316,6 @@ export function BookingPage() {
       }
 
       setBookingID(returnedBookingId);
-
-      const screenshotFormData = new FormData();
-      screenshotFormData.append("file", paymentScreenshot);
-
-      const screenshotResponse = await fetch(
-        `/api/booking/${encodeURIComponent(returnedBookingId)}/payment-screenshot`,
-        {
-          method: "POST",
-          body: screenshotFormData,
-        },
-      );
-
-      const screenshotResult =
-        await screenshotResponse.json().catch(() => null);
-
-      if (
-        !screenshotResponse.ok ||
-        !screenshotResult?.success
-      ) {
-        throw new Error(
-          screenshotResult?.message ||
-            "Booking was created, but the payment screenshot could not be uploaded.",
-        );
-      }
 
       const whatsappMessage = `Hi Chatpate Routes!
 
@@ -337,9 +355,7 @@ ${
 Notes:
 ${message.trim() || "None"}
 
-I have completed the 60% advance payment.
-
-I have submitted my payment screenshot through the website.`;
+I will share my payment details and screenshot with you on WhatsApp.`;
 
       const url =
         `https://wa.me/${WHATSAPP_NUMBER}` +
@@ -369,7 +385,7 @@ I have submitted my payment screenshot through the website.`;
   /*
    * Loading state
    */
-  if (tripLoading) {
+  if (!authChecked || tripLoading) {
     return (
       <div className="booking-page-react">
         <nav className="navbar">
@@ -484,9 +500,8 @@ I have submitted my payment screenshot through the website.`;
             </h1>
 
             <p className="page-intro">
-              Fill in your details, complete
-              the payment and confirm your
-              booking with us on WhatsApp.
+              Fill in your details and confirm
+              your booking with us on WhatsApp.
             </p>
 
             {!submitted ? (
@@ -713,51 +728,15 @@ I have submitted my payment screenshot through the website.`;
                         </div>
 
                         <p className="payment-note">
-                          Complete the advance
-                          payment, upload your
-                          payment screenshot
-                          below, and submit it
-                          for verification.
+                          Payment details and any
+                          screenshot can be shared
+                          with our team on WhatsApp
+                          after you submit.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* ========================= */}
-                  {/* PAYMENT SCREENSHOT */}
-                  {/* ========================= */}
-
-                  <div className="payment-screenshot-section">
-                    <label
-                      className="form-label"
-                      htmlFor="paymentScreenshot"
-                    >
-                      Payment Screenshot *
-                    </label>
-
-                    <input
-                      id="paymentScreenshot"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="form-input"
-                      required
-                      onChange={(e) =>
-                        setPaymentScreenshot(
-                          e.target.files?.[0] ??
-                            null,
-                        )
-                      }
-                    />
-
-                    {paymentScreenshot && (
-                      <p className="payment-screenshot-name">
-                        Selected:{" "}
-                        {
-                          paymentScreenshot.name
-                        }
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 {/* ========================= */}
@@ -771,14 +750,14 @@ I have submitted my payment screenshot through the website.`;
                     disabled={submitting}
                   >
                     {submitting
-                      ? "Submitting Payment..."
-                      : "Submit Payment →"}
+                      ? "Submitting Booking..."
+                      : "Submit Booking →"}
                   </button>
 
                   <p className="submit-note">
-                    Your booking details and
-                    payment screenshot will be
-                    submitted for verification.
+                    Your booking will be saved and
+                    you can share payment details on
+                    WhatsApp.
                   </p>
                 </div>
               </form>
@@ -795,11 +774,10 @@ I have submitted my payment screenshot through the website.`;
                 <h2>Almost there.</h2>
 
                 <p>
-                  Your booking details and
-                  payment screenshot have been
-                  submitted successfully. Your
-                  payment is now being verified
-                  by the Chatpate Routes team.
+                  Your booking details have been
+                  submitted successfully. Continue
+                  on WhatsApp to share payment details
+                  and complete confirmation.
                 </p>
 
                 {bookingID && (

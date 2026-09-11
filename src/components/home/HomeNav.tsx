@@ -6,11 +6,7 @@ const navItems = [
   { href: "/contact", label: "Contact", num: "03" },
 ];
 
-export function HomeNav({
-  onJoinTrip,
-}: {
-  onJoinTrip: () => void;
-}) {
+export function HomeNav() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -30,21 +26,14 @@ export function HomeNav({
         <ul className="nav-links">
           {navItems.map((item) => (
             <li key={item.href}>
-              <a href={item.href}>
+              <a href={item.href === "#trips" ? "/trips" : item.href}>
                 {item.label}
               </a>
             </li>
           ))}
 
           <li>
-            <a
-              href="#trips"
-              className="nav-cta"
-              onClick={(event) => {
-                event.preventDefault();
-                onJoinTrip();
-              }}
-            >
+            <a href="/login?redirect=%2Ftrips" className="nav-cta">
               Join Trip
             </a>
           </li>
@@ -85,7 +74,7 @@ export function HomeNav({
           {navItems.map((item) => (
             <a
               key={item.href}
-              href={item.href}
+              href={item.href === "#trips" ? "/trips" : item.href}
               onClick={() => setOpen(false)}
             >
               <span>{item.num}</span>
@@ -95,13 +84,9 @@ export function HomeNav({
         </div>
 
         <a
-          href="#trips"
+          href="/login?redirect=%2Ftrips"
           className="mobile-menu-cta"
-          onClick={(event) => {
-            event.preventDefault();
-            setOpen(false);
-            onJoinTrip();
-          }}
+          onClick={() => setOpen(false)}
         >
           FIND MY TRIP
         </a>

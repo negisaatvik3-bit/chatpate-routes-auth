@@ -130,11 +130,53 @@ export const Route = createFileRoute("/api/trips/$tripId")({
         try {
           const supabase = getSupabaseClient(request);  
 
-          const { data: trip, error } = await supabase
-            .from("trips")
-            .select("*")
+            const { data: slugTrip, error: slugError } = await supabase
+              .from("trips")
+              .select(`
+                *,
+                trip_images (
+                  id,
+                  image_url,
+                  is_cover,
+                  display_order
+                ),
+                trip_itinerary (
+                  id,
+                  day_number,
+                  title,
+                  description
+                )
+              `)
             .eq("slug", params.tripId)
-            .single();
+            .maybeSingle();
+
+          let trip = slugTrip;
+          let error = slugError;
+
+          if (!trip) {
+            const byId = await supabase
+              .from("trips")
+              .select(`
+                *,
+                trip_images (
+                  id,
+                  image_url,
+                  is_cover,
+                  display_order
+                ),
+                trip_itinerary (
+                  id,
+                  day_number,
+                  title,
+                  description
+                )
+              `)
+              .eq("id", params.tripId)
+              .maybeSingle();
+
+            trip = byId.data;
+            error = byId.error;
+          }
 
           if (error || !trip) {
             console.error("Trip detail Supabase error:", error);

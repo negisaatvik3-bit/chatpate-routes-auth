@@ -7,7 +7,7 @@ import heroImage from "@/assets/home-hero.png";
 import birRouteImage from "@/assets/bir.png";
 import foodImage from "@/assets/home-food.png";
 import peopleImage from "@/assets/03.jpg";
-import founderImage from "@/assets/nishu.png";
+import founderImage from "@/assets/nishu.webp";
 
 import archive01 from "@/assets/01.jpg";
 import archive02 from "@/assets/02.jpg";

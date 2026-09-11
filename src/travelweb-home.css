@@ -713,7 +713,15 @@ body.menu-open {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.trip-slider::-webkit-scrollbar {
+  display: none;
 }
 
 /* =========================
@@ -728,8 +736,7 @@ body.menu-open {
   margin: 0;
   padding: 0;
   transform: translateX(0);
-  transition: transform 0.55s cubic-bezier(.22, .61, .36, 1);
-  will-change: transform;
+  transform: none;
 }
 
 /* =========================

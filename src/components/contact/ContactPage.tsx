@@ -6,7 +6,7 @@ export default function ContactPage() {
   return (
     <>
       <div className="contact-navbar">
-        <Navbar />
+        <Navbar activePage="contact" />
       </div>
       <main className="contact-page">
       <section className="contact-section">

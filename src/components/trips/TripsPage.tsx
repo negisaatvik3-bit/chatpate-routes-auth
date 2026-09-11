@@ -116,7 +116,7 @@ function backendTripToTrip(trip: BackendTrip): Trip {
     month,
     availability: trip.capacity
       ? `${trip.capacity} SPOTS`
-      : "CHECK AVAILABILITY",
+      : "",
     image: trip.cover_image_url || tripHero,
     alt: trip.title,
     categories: [
@@ -157,7 +157,9 @@ function TripCard({ trip, index }: { trip: Trip; index: number }) {
         <div className="trips-trip-image">
           <img src={trip.image} alt={trip.alt} />
           <div className="trips-trip-season">{trip.season}</div>
-          <div className="trips-trip-availability">{trip.availability}</div>
+          {trip.availability ? (
+            <div className="trips-trip-availability">{trip.availability}</div>
+          ) : null}
         </div>
         <div className="trips-trip-info">
           <h3>{trip.name}</h3>

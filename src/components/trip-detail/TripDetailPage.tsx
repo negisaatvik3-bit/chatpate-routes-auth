@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearch } from "@tanstack/react-router";
+import Navbar from "@/components/layout/Navbar";
 import "./trip-detail.css";
 
 const sections = [
@@ -103,7 +104,6 @@ export function TripDetailPage() {
   const [tripData, setTripData] = useState<BackendTrip | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeSection, setActiveSection] = useState("overview");
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -144,19 +144,6 @@ export function TripDetailPage() {
 
     loadTrip();
   }, [trip]);
-
-  useEffect(() => {
-    document.body.classList.toggle(
-      "trip-detail-menu-open",
-      menuOpen
-    );
-
-    return () => {
-      document.body.classList.remove(
-        "trip-detail-menu-open"
-      );
-    };
-  }, [menuOpen]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -288,82 +275,7 @@ export function TripDetailPage() {
         </a>
       </div>
 
-      {/* NAVBAR */}
-      <nav className="trip-detail-navbar">
-        <div className="trip-detail-nav-brand">
-          Chatpate Routes
-        </div>
-
-        <ul className="trip-detail-nav-links">
-          <li>
-            <a href="/trips">Trips</a>
-          </li>
-
-          <li>
-            <a href="/#about">About</a>
-          </li>
-
-          <li>
-            <a href="/contact">Contact</a>
-          </li>
-        </ul>
-
-        <button
-          className="trip-detail-hamburger"
-          onClick={() => setMenuOpen(true)}
-          aria-label="Open menu"
-          aria-expanded={menuOpen}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </nav>
-
-      {/* MOBILE MENU */}
-      <div
-        className={`trip-detail-mobile-menu ${
-          menuOpen ? "active" : ""
-        }`}
-      >
-        <div className="trip-detail-mobile-menu-top">
-          <div className="trip-detail-mobile-menu-brand">
-            Chatpate Routes
-          </div>
-
-          <button
-            className="trip-detail-menu-close"
-            onClick={() => setMenuOpen(false)}
-            aria-label="Close menu"
-          >
-            <span />
-            <span />
-          </button>
-        </div>
-
-        <div className="trip-detail-mobile-menu-links">
-          <a
-            href="/trips"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span>01</span> Trips
-          </a>
-
-          <a
-            href="/#about"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span>02</span> About
-          </a>
-
-          <a
-            href="/contact"
-            onClick={() => setMenuOpen(false)}
-          >
-            <span>03</span> Contact
-          </a>
-        </div>
-      </div>
+      <Navbar />
 
       {/* HERO */}
       <section className="trip-detail-hero">

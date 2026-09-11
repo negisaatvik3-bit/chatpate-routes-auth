@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import birImage from "@/assets/bir-copy.png";
 import jibhiImage from "@/assets/jibhi.png";
@@ -76,9 +76,11 @@ function formatPrice(price: number | null, title: string) {
 }
 
 export function UpcomingTrips() {
-  const [current, setCurrent] = useState(0);
   const [trips, setTrips] = useState<BackendTrip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [canScrollPrevious, setCanScrollPrevious] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadTrips = async () => {
@@ -101,14 +103,45 @@ export function UpcomingTrips() {
     loadTrips();
   }, []);
 
-  const nextTrip = () => {
-    setCurrent((value) =>
-      Math.min(value + 1, Math.max(trips.length - 1, 0)),
-    );
-  };
+  const updateScrollState = useCallback(() => {
+    const slider = sliderRef.current;
 
-  const previousTrip = () => {
-    setCurrent((value) => Math.max(value - 1, 0));
+    if (!slider) return;
+
+    setCanScrollPrevious(slider.scrollLeft > 4);
+    setCanScrollNext(
+      slider.scrollLeft + slider.clientWidth < slider.scrollWidth - 4,
+    );
+  }, []);
+
+  useEffect(() => {
+    const slider = sliderRef.current;
+
+    if (!slider) return;
+
+    updateScrollState();
+    slider.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      slider.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [isLoading, trips, updateScrollState]);
+
+  const scrollByCard = (direction: 1 | -1) => {
+    const slider = sliderRef.current;
+    const track = slider?.querySelector<HTMLElement>(".trip-grid");
+    const card = slider?.querySelector<HTMLElement>(".trip-card-link");
+
+    if (!slider || !track || !card) return;
+
+    const gap = parseFloat(window.getComputedStyle(track).gap) || 0;
+
+    slider.scrollBy({
+      left: direction * (card.getBoundingClientRect().width + gap),
+      behavior: "smooth",
+    });
   };
 
   if (isLoading) {
@@ -142,8 +175,8 @@ export function UpcomingTrips() {
           <button
             type="button"
             className="trip-arrow prev"
-            onClick={previousTrip}
-            disabled={current === 0}
+            onClick={() => scrollByCard(-1)}
+            disabled={!canScrollPrevious}
             aria-label="Previous trips"
           >
             ←
@@ -152,8 +185,8 @@ export function UpcomingTrips() {
           <button
             type="button"
             className="trip-arrow next"
-            onClick={nextTrip}
-            disabled={current >= trips.length - 1}
+            onClick={() => scrollByCard(1)}
+            disabled={!canScrollNext}
             aria-label="Next trips"
           >
             →
@@ -161,13 +194,8 @@ export function UpcomingTrips() {
         </div>
       </div>
 
-      <div className="trip-slider">
-        <div
-          className="trip-grid"
-          style={{
-            transform: `translateX(-${current * 33.333}%)`,
-          }}
-        >
+      <div className="trip-slider" ref={sliderRef}>
+        <div className="trip-grid">
           {trips.map((trip) => {
             const title = trip.title;
 

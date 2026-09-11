@@ -31,7 +31,7 @@ function TermsPage() {
     <div className="terms-page">
       <header>
         <nav className="terms-navbar">
-          <div className="terms-nav-brand">Chatpate Routes</div>
+          <a className="terms-nav-brand" href="/">Chatpate Routes</a>
 
           <ul className="terms-nav-links">
             <li><a href="/#trips">Trips</a></li>
@@ -58,7 +58,7 @@ function TermsPage() {
 
         <div className={`terms-mobile-menu ${menuOpen ? "active" : ""}`}>
           <div className="terms-mobile-menu-top">
-            <div className="terms-mobile-menu-brand">Chatpate Routes</div>
+          <a className="terms-mobile-menu-brand" href="/" onClick={closeMenu}>Chatpate Routes</a>
             <button
               className="terms-menu-close"
               type="button"

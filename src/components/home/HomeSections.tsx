@@ -62,7 +62,7 @@ export function HeroSection({
   }, [destination, backendTrips]);
 
   const selectSuggestion = (trip: BackendTrip) => {
-    setDestination(trip.title);
+    setDestination(trip.destination);
     setSuggestionsOpen(false);
     setHighlightedSuggestion(-1);
   };

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integerations/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
@@ -7,6 +7,13 @@ import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => ({
+   redirect:
+  typeof search["redirect"] === "string"
+    ? search["redirect"]
+    : "",
+  }),
+
   head: () => ({
     meta: [
       { title: "Log in to Chatpate Routes" },
@@ -27,6 +34,9 @@ function LoginPage() {
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
   const [socialError, setSocialError] = useState<string | null>(null);
+  const { redirect } = useSearch({
+    from: "/login",
+  });
 
   return (
     <AuthLayout
@@ -56,80 +66,80 @@ function LoginPage() {
         ) : null}
         <AuthDivider />
       </div>
-      <LoginForm />
+      <LoginForm redirectTo={redirect} />
       <div className="mt-4">
-  <form
-    onSubmit={async (event) => {
-      event.preventDefault();
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
 
-      setResetMessage(null);
-      setResetError(null);
+            setResetMessage(null);
+            setResetError(null);
 
-      if (!resetEmail.trim()) {
-        setResetError("Please enter your email address.");
-        return;
-      }
+            if (!resetEmail.trim()) {
+              setResetError("Please enter your email address.");
+              return;
+            }
 
-      setResetting(true);
+            setResetting(true);
 
-      try {
-        const { error } = await supabase.auth.resetPasswordForEmail(
-          resetEmail.trim(),
-          {
-            redirectTo: `${window.location.origin}/reset-password`,
-          },
-        );
+            try {
+              const { error } = await supabase.auth.resetPasswordForEmail(
+                resetEmail.trim(),
+                {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                },
+              );
 
-        if (error) {
-          setResetError(error.message);
-          return;
-        }
+              if (error) {
+                setResetError(error.message);
+                return;
+              }
 
-        setResetMessage(
-          "Password recovery email sent. Please check your inbox.",
-        );
-      } catch (error) {
-        console.error("Password reset request error:", error);
+              setResetMessage(
+                "Password recovery email sent. Please check your inbox.",
+              );
+            } catch (error) {
+              console.error("Password reset request error:", error);
 
-        setResetError(
-          "Unable to send the password recovery email. Please try again.",
-        );
-      } finally {
-        setResetting(false);
-      }
-    }}
-    className="space-y-3"
-  >
-    <input
-      type="email"
-      value={resetEmail}
-      onChange={(event) => setResetEmail(event.target.value)}
-      placeholder="Email for password reset"
-      autoComplete="email"
-      className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-foreground"
-    />
+              setResetError(
+                "Unable to send the password recovery email. Please try again.",
+              );
+            } finally {
+              setResetting(false);
+            }
+          }}
+          className="space-y-3"
+        >
+          <input
+            type="email"
+            value={resetEmail}
+            onChange={(event) => setResetEmail(event.target.value)}
+            placeholder="Email for password reset"
+            autoComplete="email"
+            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-foreground"
+          />
 
-    <button
-      type="submit"
-      disabled={resetting}
-      className="w-full text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-    >
-      {resetting ? "Sending..." : "Forgot password?"}
-    </button>
+          <button
+            type="submit"
+            disabled={resetting}
+            className="w-full text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            {resetting ? "Sending..." : "Forgot password?"}
+          </button>
 
-    {resetMessage ? (
-      <p className="text-xs text-green-600" role="status">
-        {resetMessage}
-      </p>
-    ) : null}
+          {resetMessage ? (
+            <p className="text-xs text-green-600" role="status">
+              {resetMessage}
+            </p>
+          ) : null}
 
-    {resetError ? (
-      <p className="text-xs text-destructive" role="alert">
-        {resetError}
-      </p>
-    ) : null}
-  </form>
-</div>
+          {resetError ? (
+            <p className="text-xs text-destructive" role="alert">
+              {resetError}
+            </p>
+          ) : null}
+        </form>
+      </div>
     </AuthLayout>
   );
 }

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import "./booking.css";
 import QRCode from "../common/QRCode";
-
+import { supabase } from "@/integerations/supabase/client";
 const WHATSAPP_NUMBER = "919266770149";
 
 type BackendTrip = {
@@ -139,7 +139,7 @@ export function BookingPage() {
         if (!response.ok || !result.success) {
           throw new Error(
             result.message ||
-              "Failed to load trip.",
+            "Failed to load trip.",
           );
         }
 
@@ -176,11 +176,10 @@ export function BookingPage() {
 
   const breakdown =
     trip?.price != null
-      ? `${formatPrice(trip.price)} × ${travellerCount} ${
-          travellerCount === 1
-            ? "traveller"
-            : "travellers"
-        }`
+      ? `${formatPrice(trip.price)} × ${travellerCount} ${travellerCount === 1
+        ? "traveller"
+        : "travellers"
+      }`
       : "Price unavailable";
 
   async function handleSubmit(
@@ -236,14 +235,29 @@ export function BookingPage() {
        * isn't supplied, so we don't need to generate
        * one on the frontend.
        */
+      console.log("BOOKING PAYLOAD:", {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        trip: tripId,
+        travelDate: trip.start_date,
+        travellers: travellerCount,
+        message: message.trim(),
+      });
+            const {
+        data: { session },
+      } = await supabase.auth.getSession();
+if (!session?.access_token) {
+  throw new Error("Your login session has expired. Please log in again.");
+}
       const response = await fetch(
         "/api/booking",
         {
           method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+        headers: {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${session.access_token}`,
+},
           body: JSON.stringify({
             name: name.trim(),
             phone: phone.trim(),
@@ -262,7 +276,7 @@ export function BookingPage() {
       if (!response.ok || !result.success) {
         throw new Error(
           result.message ||
-            "Failed to submit booking.",
+          "Failed to submit booking.",
         );
       }
 
@@ -276,12 +290,21 @@ export function BookingPage() {
       setBookingID(returnedBookingId);
 
       const screenshotFormData = new FormData();
-      screenshotFormData.append("file", paymentScreenshot);
+      screenshotFormData.append("screenshot", paymentScreenshot);
+
+
+
+      if (!session?.access_token) {
+        throw new Error("Your login session has expired. Please log in again.");
+      }
 
       const screenshotResponse = await fetch(
         `/api/booking/${encodeURIComponent(returnedBookingId)}/payment-screenshot`,
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
           body: screenshotFormData,
         },
       );
@@ -295,7 +318,7 @@ export function BookingPage() {
       ) {
         throw new Error(
           screenshotResult?.message ||
-            "Booking was created, but the payment screenshot could not be uploaded.",
+          "Booking was created, but the payment screenshot could not be uploaded.",
         );
       }
 
@@ -303,36 +326,33 @@ export function BookingPage() {
 
 I'd like to confirm my booking.
 
-Booking ID: ${
-        returnedBookingId || "Pending"
-      }
+Booking ID: ${returnedBookingId || "Pending"
+        }
 
 Trip: ${trip.title}
 Dates: ${formatDateRange(
-        trip.start_date,
-        trip.end_date,
-      )}
+          trip.start_date,
+          trip.end_date,
+        )}
 Travellers: ${travellerCount}
 
 Name: ${name.trim()}
 WhatsApp: ${phone.trim()}
 Email: ${email.trim()}
 
-Price per person: ${
-        trip.price != null
+Price per person: ${trip.price != null
           ? formatPrice(trip.price)
           : "Price on request"
-      }
+        }
 Total Amount: ${formatPrice(totalAmount)}
 Advance Paid: ${formatPrice(
-        advanceAmount,
-      )}
+          advanceAmount,
+        )}
 
 Traveller Names:
-${
-  travellerNames.trim() ||
-  "Same as above"
-}
+${travellerNames.trim() ||
+        "Same as above"
+        }
 
 Notes:
 ${message.trim() || "None"}
@@ -744,7 +764,7 @@ I have submitted my payment screenshot through the website.`;
                       onChange={(e) =>
                         setPaymentScreenshot(
                           e.target.files?.[0] ??
-                            null,
+                          null,
                         )
                       }
                     />

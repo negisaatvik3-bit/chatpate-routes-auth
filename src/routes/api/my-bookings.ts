@@ -1,64 +1,97 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { getServerEnv } from "../../lib/server-env";
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    getServerEnv("SUPABASE_URL") ||
+    import.meta.env["VITE_SUPABASE_URL"];
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase server environment variables are missing.");
+  const supabaseKey =
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+
+  if (!supabaseUrl) {
+    throw new Error("Missing Supabase URL configuration.");
   }
 
-  const authorization = request.headers.get("Authorization");
+  if (!supabaseKey) {
+    throw new Error(
+      "Missing Supabase publishable key configuration.",
+    );
+  }
 
-  return createClient(supabaseUrl, supabaseKey, {
-    global: {
-      headers: authorization
-        ? {
-            Authorization: authorization,
-          }
-        : {},
+  const authorization =
+    request.headers.get("Authorization");
+
+  return createClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      global: {
+        headers: authorization
+          ? {
+              Authorization: authorization,
+            }
+          : {},
+      },
     },
-  });
+  );
 }
 
-export const Route = createFileRoute("/api/my-bookings")({
+export const Route = createFileRoute(
+  "/api/my-bookings",
+)({
   server: {
     handlers: {
       GET: async ({ request }) => {
         try {
-          const authorization = request.headers.get("Authorization");
+          const authorization =
+            request.headers.get("Authorization");
 
-          if (!authorization?.startsWith("Bearer ")) {
+          if (
+            !authorization?.startsWith("Bearer ")
+          ) {
             return Response.json(
               {
                 success: false,
-                message: "Authentication required.",
+                message:
+                  "Authentication required.",
               },
               { status: 401 },
             );
           }
 
-          const supabase = getSupabaseClient(request);
+          const supabase =
+            getSupabaseClient(request);
 
-          const token = authorization.replace("Bearer ", "");
+          const token =
+            authorization.replace(
+              "Bearer ",
+              "",
+            );
 
           const {
             data: { user },
             error: authError,
-          } = await supabase.auth.getUser(token);
+          } =
+            await supabase.auth.getUser(token);
 
           if (authError || !user) {
             return Response.json(
               {
                 success: false,
-                message: "Invalid or expired authentication token.",
+                message:
+                  "Invalid or expired authentication token.",
               },
               { status: 401 },
             );
           }
 
-          const { data: bookings, error } = await supabase
+          const {
+            data: bookings,
+            error,
+          } = await supabase
             .from("bookings")
             .select(`
               id,
@@ -72,6 +105,7 @@ export const Route = createFileRoute("/api/my-bookings")({
               total_amount,
               payment_status,
               payment_id,
+              payment_screenshot_url,
               created_at,
               updated_at,
               trip:trips (
@@ -87,15 +121,21 @@ export const Route = createFileRoute("/api/my-bookings")({
               )
             `)
             .eq("user_id", user.id)
-            .order("created_at", { ascending: false });
+            .order("created_at", {
+              ascending: false,
+            });
 
           if (error) {
-            console.error("Get my bookings error:", error);
+            console.error(
+              "Get my bookings error:",
+              error,
+            );
 
             return Response.json(
               {
                 success: false,
-                message: "Could not retrieve your bookings.",
+                message:
+                  "Could not retrieve your bookings.",
               },
               { status: 500 },
             );
@@ -107,12 +147,16 @@ export const Route = createFileRoute("/api/my-bookings")({
             count: bookings?.length ?? 0,
           });
         } catch (error) {
-          console.error("My bookings GET error:", error);
+          console.error(
+            "My bookings GET error:",
+            error,
+          );
 
           return Response.json(
             {
               success: false,
-              message: "Could not retrieve your bookings.",
+              message:
+                "Could not retrieve your bookings.",
             },
             { status: 500 },
           );

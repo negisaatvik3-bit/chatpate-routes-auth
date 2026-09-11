@@ -9,7 +9,13 @@ interface Errors {
   password?: string;
 }
 
-export function LoginForm({ variant = "user" }: { variant?: "user" | "admin" }) {
+export function LoginForm({
+  variant = "user",
+  redirectTo,
+}: {
+  variant?: "user" | "admin";
+  redirectTo?: string;
+}) {
   const navigate = useNavigate();
   const [values, setValues] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Errors>({});
@@ -35,10 +41,12 @@ export function LoginForm({ variant = "user" }: { variant?: "user" | "admin" }) 
       const fn = variant === "admin" ? handleAdminLogin : handleLogin;
       await fn({ email: values.email.trim(), password: values.password });
       if (variant === "admin") {
-        navigate({ to: "/admin/trips" });
-      } else {
-        navigate({ to: "/" });
-      }
+  navigate({ to: "/admin/trips" });
+} else if (redirectTo) {
+  window.location.href = redirectTo;
+} else {
+  navigate({ to: "/" });
+}
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to log in right now.");
     } finally {

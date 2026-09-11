@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { getServerEnv } from "../../../lib/server-env";
 
 const updateTripSchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
@@ -43,11 +44,20 @@ const updateTripSchema = z.object({
 });
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    getServerEnv("SUPABASE_URL") ||
+    import.meta.env["VITE_SUPABASE_URL"];
 
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase server environment variables are missing.");
+  const supabaseKey =
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+
+  if (!supabaseUrl) {
+    throw new Error("Missing Supabase URL configuration.");
+  }
+
+  if (!supabaseKey) {
+    throw new Error("Missing Supabase publishable key configuration.");
   }
 
   const authorization = request.headers.get("Authorization");
@@ -56,13 +66,12 @@ function getSupabaseClient(request: Request) {
     global: {
       headers: authorization
         ? {
-            Authorization: authorization,
-          }
+          Authorization: authorization,
+        }
         : {},
     },
   });
 }
-
 async function requireAdmin(request: Request) {
   const authorization = request.headers.get("Authorization");
 
@@ -128,14 +137,14 @@ export const Route = createFileRoute("/api/trips/$tripId")({
     handlers: {
       GET: async ({ request, params }) => {
         try {
-          const supabase = getSupabaseClient(request);  
+          const supabase = getSupabaseClient(request);
 
           const { data: trip, error } = await supabase
             .from("trips")
             .select("*")
-            .eq("slug", params.tripId)
+            .or(`id.eq.${params.tripId},slug.eq.${params.tripId}`)
+            .eq("status", "published")
             .single();
-
           if (error || !trip) {
             console.error("Trip detail Supabase error:", error);
 

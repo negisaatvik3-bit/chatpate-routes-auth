@@ -2,7 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { appendBookingToSheet } from "../../lib/booking/google-sheets";
 import { sendBookingNotificationEmail } from "../../lib/booking/email";
-import { ConfigurationError } from "../../lib/server-env";
+import {
+  ConfigurationError,
+  getServerEnv,
+} from "../../lib/server-env";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -20,9 +23,13 @@ const bookingSchema = z.object({
 });
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    getServerEnv("SUPABASE_URL") ||
+    import.meta.env["VITE_SUPABASE_URL"];
 
+  const supabaseKey =
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase server environment variables are missing.");
   }
@@ -33,8 +40,8 @@ function getSupabaseClient(request: Request) {
     global: {
       headers: authorization
         ? {
-            Authorization: authorization,
-          }
+          Authorization: authorization,
+        }
         : {},
     },
   });
@@ -189,9 +196,8 @@ export const Route = createFileRoute("/api/booking")({
                   message:
                     remainingSeats === 0
                       ? "This trip is fully booked."
-                      : `Only ${remainingSeats} seat${
-                          remainingSeats === 1 ? "" : "s"
-                        } remaining for this trip.`,
+                      : `Only ${remainingSeats} seat${remainingSeats === 1 ? "" : "s"
+                      } remaining for this trip.`,
                   availableSeats: remainingSeats,
                   requestedSeats: booking.travellers,
                 },
@@ -233,9 +239,7 @@ export const Route = createFileRoute("/api/booking")({
                 status: "in_progress",
                 total_amount: totalAmount,
                 payment_status: "pending",
-              })
-              .select()
-              .single();
+              });
 
           if (bookingError) {
             console.error("Supabase booking error:", bookingError);

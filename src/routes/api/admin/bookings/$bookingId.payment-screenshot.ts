@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-
+import { getServerEnv } from "../../../../lib/server-env";
 const BUCKET_NAME = "payment-screenshots";
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+  getServerEnv("SUPABASE_URL") ||
+  import.meta.env["VITE_SUPABASE_URL"];
 
+const supabaseKey =
+  getServerEnv("SUPABASE_PUBLISHABLE_KEY") ||
+  import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase server environment variables are missing.");
   }

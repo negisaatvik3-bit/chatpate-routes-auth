@@ -47,11 +47,11 @@ type BackendTrip = {
   what_to_bring: string[] | null;
   rules: string[] | null;
   faq:
-    | {
-        question: string;
-        answer: string;
-      }[]
-    | null;
+  | {
+    question: string;
+    answer: string;
+  }[]
+  | null;
   cover_image_url: string | null;
   trip_images: TripImage[];
   trip_itinerary: TripItinerary[];
@@ -254,8 +254,8 @@ export function TripDetailPage() {
   const itinerary =
     tripData.trip_itinerary?.length
       ? [...tripData.trip_itinerary].sort(
-          (a, b) => a.day_number - b.day_number
-        )
+        (a, b) => a.day_number - b.day_number
+      )
       : [];
 
   const faqs = tripData.faq || [];
@@ -322,9 +322,8 @@ export function TripDetailPage() {
 
       {/* MOBILE MENU */}
       <div
-        className={`trip-detail-mobile-menu ${
-          menuOpen ? "active" : ""
-        }`}
+        className={`trip-detail-mobile-menu ${menuOpen ? "active" : ""
+          }`}
       >
         <div className="trip-detail-mobile-menu-top">
           <div className="trip-detail-mobile-menu-brand">
@@ -581,23 +580,23 @@ export function TripDetailPage() {
                   [
                     "Destination",
                     tripData.destination ||
-                      "Not specified",
+                    "Not specified",
                   ],
                   [
                     "Group Size",
                     tripData.group_size ||
-                      "Not specified",
+                    "Not specified",
                   ],
                   [
                     "Accommodation",
                     tripData.accommodation_description ||
-                      tripData.accommodation ||
-                      "Not specified",
+                    tripData.accommodation ||
+                    "Not specified",
                   ],
                   [
                     "Stay Location",
                     tripData.stay_location ||
-                      "Not specified",
+                    "Not specified",
                   ],
                 ].map(([label, value]) => (
                   <div
@@ -772,9 +771,8 @@ export function TripDetailPage() {
 
                     return (
                       <div
-                        className={`trip-detail-faq-item ${
-                          isOpen ? "open" : ""
-                        }`}
+                        className={`trip-detail-faq-item ${isOpen ? "open" : ""
+                          }`}
                         key={`${faq.question}-${index}`}
                       >
                         <button
@@ -854,12 +852,12 @@ export function TripDetailPage() {
                     [
                       "Location",
                       tripData.destination ||
-                        "Not specified",
+                      "Not specified",
                     ],
                     [
                       "Group",
                       tripData.group_size ||
-                        "Small Group",
+                      "Small Group",
                     ],
                   ].map(([label, value]) => (
                     <div
@@ -897,8 +895,8 @@ export function TripDetailPage() {
 
                 <a
                   className="trip-detail-book-btn"
-                  href={`/booking?trip=${encodeURIComponent(
-                    tripData.id
+                  href={`/login?redirect=${encodeURIComponent(
+                    `/booking?trip=${tripData.id}`,
                   )}`}
                 >
                   Book Now →

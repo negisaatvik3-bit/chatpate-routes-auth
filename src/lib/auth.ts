@@ -40,11 +40,34 @@ export async function handleSignup(
   }
 }
 
-export async function handleGoogleLogin(): Promise<void> {
+export function getSafeRedirectPath(
+  value: string | null | undefined,
+  fallback = "/",
+): string {
+  const candidate = value?.trim();
+
+  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) {
+    return fallback;
+  }
+
+  return candidate;
+}
+
+export async function handleGoogleLogin(options: {
+  returnPath?: string;
+  admin?: boolean;
+} = {}): Promise<void> {
+  const returnPath = getSafeRedirectPath(options.returnPath, "/");
+  const callbackParams = new URLSearchParams({ next: returnPath });
+
+  if (options.admin) {
+    callbackParams.set("admin", "1");
+  }
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: window.location.origin,
+      redirectTo: `${window.location.origin}/auth/callback?${callbackParams.toString()}`,
     },
   });
 

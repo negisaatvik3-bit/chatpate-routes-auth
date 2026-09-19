@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { LoginForm } from "@/components/auth/LoginForm";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
@@ -35,11 +35,12 @@ function AdminLoginPage() {
           Welcome back, Admin
         </h1>
         <p className="mx-auto mt-3 max-w-xs text-sm text-muted-foreground">
-          Sign in with your administrator credentials to manage trips and members.
+          Use your authorised Google account to manage trips and members.
         </p>
       </div>
-      <div className="mt-6">
-        <LoginForm variant="admin" />
+
+      <div className="mt-8">
+        <GoogleSignInButton returnPath="/admin/trips" admin />
       </div>
     </AuthLayout>
   );

@@ -25,6 +25,7 @@ import { Route as ApiBookingRouteImport } from './routes/api/booking'
 import { Route as ApiEnquiriesRouteImport } from './routes/api/enquiries'
 import { Route as ApiMyBookingsRouteImport } from './routes/api/my-bookings'
 import { Route as ApiTripsRouteImport } from './routes/api/trips'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as DashboardBookingsRouteImport } from './routes/dashboard.bookings'
 import { Route as AdminTripsIndexRouteImport } from './routes/admin.trips.index'
 import { Route as AdminTripsNewRouteImport } from './routes/admin.trips.new'
@@ -119,6 +120,11 @@ const ApiMyBookingsRoute = ApiMyBookingsRouteImport.update({
 const ApiTripsRoute = ApiTripsRouteImport.update({
   id: '/api/trips',
   path: '/api/trips',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardBookingsRoute = DashboardBookingsRouteImport.update({
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/api/enquiries': typeof ApiEnquiriesRoute
   '/api/my-bookings': typeof ApiMyBookingsRoute
   '/api/trips': typeof ApiTripsRouteWithChildren
+  '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/auth/callback'
     | '/dashboard/bookings'
     | '/admin/trips/new'
     | '/api/admin/bookings'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/auth/callback'
     | '/dashboard/bookings'
     | '/admin/trips/new'
     | '/api/admin/bookings'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/api/enquiries'
     | '/api/my-bookings'
     | '/api/trips'
+    | '/auth/callback'
     | '/dashboard/bookings'
     | '/admin/trips/new'
     | '/api/admin/bookings'
@@ -418,6 +430,7 @@ export interface RootRouteChildren {
   ApiEnquiriesRoute: typeof ApiEnquiriesRoute
   ApiMyBookingsRoute: typeof ApiMyBookingsRoute
   ApiTripsRoute: typeof ApiTripsRouteWithChildren
+  AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardBookingsRoute: typeof DashboardBookingsRoute
   ApiAdminBookingsRoute: typeof ApiAdminBookingsRouteWithChildren
   ApiAdminEnquiriesRoute: typeof ApiAdminEnquiriesRoute
@@ -537,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: '/api/trips'
       fullPath: '/api/trips'
       preLoaderRoute: typeof ApiTripsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/bookings': {
@@ -755,6 +775,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEnquiriesRoute: ApiEnquiriesRoute,
   ApiMyBookingsRoute: ApiMyBookingsRoute,
   ApiTripsRoute: ApiTripsRouteWithChildren,
+  AuthCallbackRoute: AuthCallbackRoute,
   DashboardBookingsRoute: DashboardBookingsRoute,
   ApiAdminBookingsRoute: ApiAdminBookingsRouteWithChildren,
   ApiAdminEnquiriesRoute: ApiAdminEnquiriesRoute,

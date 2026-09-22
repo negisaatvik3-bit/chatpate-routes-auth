@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { getServerEnv } from "../../../lib/server-env";
 import { z } from "zod";
 
 const itinerarySchema = z.object({
@@ -9,8 +10,11 @@ const itinerarySchema = z.object({
 });
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    import.meta.env["VITE_SUPABASE_URL"] || getServerEnv("SUPABASE_URL");
+  const supabaseKey =
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY");
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase server environment variables are missing.");

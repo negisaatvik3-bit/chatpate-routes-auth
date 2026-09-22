@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { appendBookingToSheet } from "../../lib/booking/google-sheets";
 import { sendBookingNotificationEmail } from "../../lib/booking/email";
-import { ConfigurationError } from "../../lib/server-env";
+import { ConfigurationError, getServerEnv } from "../../lib/server-env";
 import { z } from "zod";
 
 const bookingSchema = z.object({
@@ -20,8 +20,11 @@ const bookingSchema = z.object({
 });
 
 function getSupabaseClient(request: Request) {
-  const supabaseUrl = process.env["SUPABASE_URL"];
-  const supabaseKey = process.env["SUPABASE_PUBLISHABLE_KEY"];
+  const supabaseUrl =
+    import.meta.env["VITE_SUPABASE_URL"] || getServerEnv("SUPABASE_URL");
+  const supabaseKey =
+    import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    getServerEnv("SUPABASE_PUBLISHABLE_KEY");
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase server environment variables are missing.");
@@ -217,25 +220,22 @@ export const Route = createFileRoute("/api/booking")({
            * New bookings start as in_progress because payment
            * is completed manually through UPI.
            */
-          const { data: savedBooking, error: bookingError } =
-            await supabase
-              .from("bookings")
-              .insert({
-                id: booking.bookingId,
-                user_id: user?.id ?? null,
-                trip_id: trip.id,
-                full_name: booking.name,
-                email: booking.email,
-                phone: booking.phone,
-                number_of_people: booking.travellers,
-                booking_date: booking.travelDate,
-                special_requests: booking.message,
-                status: "in_progress",
-                total_amount: totalAmount,
-                payment_status: "pending",
-              })
-              .select()
-              .single();
+          const { error: bookingError } = await supabase
+            .from("bookings")
+            .insert({
+              id: booking.bookingId,
+              user_id: user?.id ?? null,
+              trip_id: trip.id,
+              full_name: booking.name,
+              email: booking.email,
+              phone: booking.phone,
+              number_of_people: booking.travellers,
+              booking_date: booking.travelDate,
+              special_requests: booking.message,
+              status: "in_progress",
+              total_amount: totalAmount,
+              payment_status: "pending",
+            });
 
           if (bookingError) {
             console.error("Supabase booking error:", bookingError);

@@ -20,8 +20,14 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Supabase CLI local link state
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
+
+# Local project context; contains internal deployment/account notes.
+CHATPATE_PROJECT_CONTEXT.md
 !.vscode/extensions.json
 .idea
 .DS_Store

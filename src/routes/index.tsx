@@ -14,6 +14,14 @@ import {
 } from "@/components/home/HomeSections";
 import { UpcomingTrips } from "@/components/home/UpcomingTrips";
 
+type SearchTrip = {
+  id: string;
+  title: string;
+  destination?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+};
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -58,6 +66,14 @@ function HomePage() {
   <main>
     <HeroSection
       onFindTrip={async (destination, travelDate, selectedTrip) => {
+        if (!destination.trim() && travelDate) {
+          navigate({
+            to: "/trips",
+            search: { month: "", date: travelDate, q: "" },
+          });
+          return;
+        }
+
         try {
           const response = await fetch("/api/trips");
 
@@ -71,17 +87,29 @@ function HomePage() {
             throw new Error("Invalid trips response");
           }
 
-          const allTrips = result.trips;
+          const allTrips = result.trips as SearchTrip[];
 
           const normalizedDestination = destination.trim().toLowerCase();
 
           // Find a trip where the destination matches
           // and the selected date falls within the trip dates.
           const selectedTripMatch = selectedTrip
-            ? allTrips.find((trip: any) => trip.id === selectedTrip.id)
+            ? allTrips.find((trip) => {
+                if (trip.id !== selectedTrip.id) return false;
+                if (!travelDate) return true;
+
+                const startDate = trip.start_date?.slice(0, 10) ?? "";
+                const endDate = trip.end_date?.slice(0, 10) || startDate;
+                return Boolean(
+                  startDate &&
+                    endDate &&
+                    travelDate >= startDate &&
+                    travelDate <= endDate,
+                );
+              })
             : null;
 
-          const matchedTrip = selectedTripMatch || allTrips.find((trip: any) => {
+          const matchedTrip = selectedTripMatch || allTrips.find((trip) => {
             const tripDestination = (
               trip.destination || trip.title || ""
             ).trim().toLowerCase();
@@ -92,13 +120,14 @@ function HomePage() {
 
             const dateMatches =
               !travelDate ||
-              (
-                travelDate >= trip.start_date &&
-                travelDate <= trip.end_date
+              Boolean(
+                trip.start_date &&
+                  travelDate >= trip.start_date.slice(0, 10) &&
+                  travelDate <= (trip.end_date || trip.start_date).slice(0, 10),
               );
 
             return destinationMatches && dateMatches;
-          }) || allTrips.find((trip: any) => {
+          }) || (!travelDate ? allTrips.find((trip) => {
             const tripDestination = (
               trip.destination || trip.title || ""
             ).trim().toLowerCase();
@@ -107,7 +136,7 @@ function HomePage() {
               tripDestination.includes(normalizedDestination) ||
               trip.title?.trim().toLowerCase().includes(normalizedDestination)
             );
-          });
+          }) : null);
 
           if (matchedTrip) {
             navigate({
@@ -117,6 +146,14 @@ function HomePage() {
               },
             });
 
+            return;
+          }
+
+          if (travelDate) {
+            navigate({
+              to: "/trips",
+              search: { month: "", date: travelDate, q: destination.trim() },
+            });
             return;
           }
 

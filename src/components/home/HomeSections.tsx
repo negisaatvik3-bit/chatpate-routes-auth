@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { DatePickerField } from "@/components/common/DatePickerField";
 import { homeImages } from "./images";
 
 type BackendTrip = {
@@ -22,6 +23,7 @@ export function HeroSection({
   ) => void;
 }) {
   const [destination, setDestination] = useState("");
+  const [travelDate, setTravelDate] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
   const [selectedTrip, setSelectedTrip] = useState<BackendTrip | null>(null);
@@ -58,12 +60,24 @@ export function HeroSection({
 
     if (!query) return [];
 
-    return backendTrips.filter((trip) =>
-      `${trip.title} ${trip.destination}`
+    return backendTrips.filter((trip) => {
+      const matchesDestination = `${trip.title} ${trip.destination}`
         .toLowerCase()
-        .includes(query),
-    );
-  }, [destination, backendTrips]);
+        .includes(query);
+      const startDate = trip.start_date?.slice(0, 10) ?? "";
+      const endDate = trip.end_date?.slice(0, 10) || startDate;
+      const matchesDate =
+        !travelDate ||
+        Boolean(
+          startDate &&
+            endDate &&
+            travelDate >= startDate &&
+            travelDate <= endDate,
+        );
+
+      return matchesDestination && matchesDate;
+    });
+  }, [destination, backendTrips, travelDate]);
 
   const selectSuggestion = (trip: BackendTrip) => {
     setDestination(trip.title);
@@ -111,11 +125,11 @@ export function HeroSection({
   const handleFindTrip = () => {
     const trimmedDestination = destination.trim();
 
-    if (!trimmedDestination) {
+    if (!trimmedDestination && !travelDate) {
       return;
     }
 
-    onFindTrip(trimmedDestination, "", selectedTrip ?? undefined);
+    onFindTrip(trimmedDestination, travelDate, selectedTrip ?? undefined);
   };
 
   return (
@@ -212,6 +226,14 @@ export function HeroSection({
               </div>
             ) : null}
           </div>
+
+          <DatePickerField
+            id="home-travel-date"
+            label="When"
+            value={travelDate}
+            onChange={setTravelDate}
+            className="date-picker-field--hero"
+          />
 
           <button
             className="search-submit"

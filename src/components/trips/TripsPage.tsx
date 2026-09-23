@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import communityImage from "@/assets/03.jpg";
 import tripHero from "@/assets/trip.png";
+import { DatePickerField } from "@/components/common/DatePickerField";
 import { TripsNav } from "./TripsNav";
 import "./trips.css";
 import { Link } from "@tanstack/react-router";
@@ -189,41 +190,37 @@ function TripCard({ trip, index }: { trip: Trip; index: number }) {
 
 export function TripsPage() {
   const today = useCurrentTripDate();
-    const { month: urlMonth, date: urlDate } = useSearch({from: "/trips",});
+    const { month: urlMonth, date: urlDate, q: urlQuery } = useSearch({from: "/trips",});
+    const navigate = useNavigate({ from: "/trips" });
     const [selectedDate, setSelectedDate] = useState(urlDate);
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState(urlQuery);
     const [filter, setFilter] = useState<Filter>("all");
     const [month, setMonth] = useState<Month>(() => {
-    if (
-      urlMonth === "september" ||
-      urlMonth === "october" ||
-      urlMonth === "november" ||
-      urlMonth === "december"
-    ) {
-      return urlMonth;
-    }
-
-    if (urlDate) {
-      const date = new Date(`${urlDate}T00:00:00`);
-      const monthNumber = date.getMonth();
-
-      const monthMap: Record<number, Month> = {
-          8: "september",
-          9: "october",
-          10: "november",
-          11: "december",
-        };
-
-        return monthMap[monthNumber] ?? "all";
-      }
-
-      return "all";
+      return urlMonth === "september" ||
+        urlMonth === "october" ||
+        urlMonth === "november" ||
+        urlMonth === "december"
+        ? urlMonth
+        : "all";
     });
   const [monthOpen, setMonthOpen] = useState(false);
   const monthRef = useRef<HTMLDivElement>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => setSelectedDate(urlDate), [urlDate]);
+  useEffect(() => setSearch(urlQuery), [urlQuery]);
+  useEffect(() => {
+    setMonth(
+      urlMonth === "september" ||
+        urlMonth === "october" ||
+        urlMonth === "november" ||
+        urlMonth === "december"
+        ? urlMonth
+        : "all",
+    );
+  }, [urlMonth]);
 
 
   useEffect(() => {
@@ -305,6 +302,10 @@ export function TripsPage() {
   setMonth("all");
   setSelectedDate("");
   setMonthOpen(false);
+  void navigate({
+    search: { month: "", date: "", q: "" },
+    replace: true,
+  });
 };
 
   const selectedMonthLabel = monthOptions.find((option) => option.value === month)?.label ?? "All Months";
@@ -330,7 +331,14 @@ export function TripsPage() {
             <input
               type="text"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                const nextSearch = event.target.value;
+                setSearch(nextSearch);
+                void navigate({
+                  search: (previous) => ({ ...previous, q: nextSearch }),
+                  replace: true,
+                });
+              }}
               placeholder="Search destinations or trips..."
               autoComplete="off"
               aria-label="Search destinations or trips"
@@ -338,6 +346,20 @@ export function TripsPage() {
           </div>
 
           <div className="trips-filters">
+            <DatePickerField
+              id="trips-travel-date"
+              label="Filter by travel date"
+              value={selectedDate}
+              className="date-picker-field--compact"
+              onChange={(nextDate) => {
+                setSelectedDate(nextDate);
+                void navigate({
+                  search: (previous) => ({ ...previous, date: nextDate }),
+                  replace: true,
+                });
+              }}
+            />
+
             {filterOptions.map((option) => (
               <button
                 key={option.value}
@@ -371,10 +393,17 @@ export function TripsPage() {
                     key={option.value}
                     type="button"
                     className={`trips-month-option${month === option.value ? " active" : ""}`}
-                    onClick={() => {
-                      setMonth(option.value);
-                      setMonthOpen(false);
-                    }}
+                  onClick={() => {
+                    setMonth(option.value);
+                    setMonthOpen(false);
+                    void navigate({
+                      search: (previous) => ({
+                        ...previous,
+                        month: option.value === "all" ? "" : option.value,
+                      }),
+                      replace: true,
+                    });
+                  }}
                   >
                     {option.label}
                   </button>

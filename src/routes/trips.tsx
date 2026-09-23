@@ -11,6 +11,10 @@ export const Route = createFileRoute("/trips")({
       typeof search["date"] === "string"
         ? search["date"]
         : "",
+    q:
+      typeof search["q"] === "string"
+        ? search["q"]
+        : "",
   }),
   component: TripsPage,
 });

@@ -57,14 +57,14 @@ function LoginPage() {
 
   return (
     <AuthLayout
-      footer="Continue with your Google account to access your trips and bookings."
+      footer="New here? Your account will be created automatically."
     >
       <div className="text-center">
         <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
-          Welcome back
+          Welcome to Chatpate Routes
         </h1>
         <p className="mx-auto mt-3 max-w-xs text-sm text-muted-foreground">
-          Your next adventure is waiting.
+          Your next adventure starts here.
         </p>
       </div>
 

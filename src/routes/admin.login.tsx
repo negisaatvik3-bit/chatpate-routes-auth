@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AuthLayout } from "@/components/auth/AuthLayout";
-import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { AdminSignInPage } from "@/components/auth/AdminSignInPage";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({
@@ -18,30 +17,5 @@ export const Route = createFileRoute("/admin/login")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: AdminLoginPage,
+  component: AdminSignInPage,
 });
-
-function AdminLoginPage() {
-  return (
-    <AuthLayout
-      place="Operations Hub"
-      region="Chatpate Routes"
-      distance="24 trips"
-      distanceNote="running this season"
-      trail="Internal access"
-    >
-      <div className="text-center">
-        <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground">
-          Welcome back, Admin
-        </h1>
-        <p className="mx-auto mt-3 max-w-xs text-sm text-muted-foreground">
-          Use your authorised Google account to manage trips and members.
-        </p>
-      </div>
-
-      <div className="mt-8">
-        <GoogleSignInButton returnPath="/admin/trips" admin />
-      </div>
-    </AuthLayout>
-  );
-}

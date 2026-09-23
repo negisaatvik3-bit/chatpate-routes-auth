@@ -138,7 +138,7 @@ export function TripsSection({
 
                   <div className="trip-bottom">
                     <span className="view-details">
-                      Explore →
+                      Explore
                     </span>
 
                     <div className="trip-price">

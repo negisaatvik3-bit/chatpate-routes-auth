@@ -7,11 +7,15 @@ interface Props {
   distanceNote?: string;
   trail?: string;
   image?: string | undefined;
+  className?: string;
 }
 
-export function AuthImagePanel({ image = defaultImage }: Props) {
+export function AuthImagePanel({
+  image = defaultImage,
+  className = "",
+}: Props) {
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-3xl">
+    <div className={`relative h-full w-full overflow-hidden ${className}`.trim()}>
       <img
         src={image}
         alt="Mountain landscape"

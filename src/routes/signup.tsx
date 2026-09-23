@@ -1,10 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { AuthDivider } from "@/components/auth/AuthDivider";
-import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
-import { SignupForm } from "@/components/auth/SignupForm";
-import signupImage from "@/assets/signup-travel.png.asset.json";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -12,13 +8,12 @@ export const Route = createFileRoute("/signup")({
       { title: "Create your Chatpate Routes account" },
       {
         name: "description",
-        content:
-          "Join the Chatpate Routes travel community and discover curated group trips worth travelling for.",
+        content: "Continue with Google to join the Chatpate Routes community.",
       },
       { property: "og:title", content: "Create your Chatpate Routes account" },
       {
         property: "og:description",
-        content: "Join a travel community built around curated group trips.",
+        content: "Your account is created automatically when you sign in with Google.",
       },
     ],
   }),
@@ -26,39 +21,18 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupPage() {
-  const [socialError, setSocialError] = useState<string | null>(null);
-
   return (
-    <AuthLayout
-      image={signupImage.url}
-      footer={
-        <>
-          Already have an account?{" "}
-          <Link to="/login" className="font-bold text-foreground hover:underline">
-            Log in
-          </Link>
-        </>
-      }
-    >
+    <AuthLayout footer="New here? Your account will be created automatically.">
       <div className="text-center">
         <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl">
-          Start your next
-          <br />
-          adventure
+          Welcome to Chatpate Routes
         </h1>
         <p className="mx-auto mt-3 max-w-xs text-sm text-muted-foreground">
-          Join the Chatpate Routes community and discover experiences worth travelling for.
+          Your next adventure starts here.
         </p>
       </div>
-      <SignupForm />
-      <AuthDivider />
-      <div className="text-center">
-        <SocialAuthButtons onError={setSocialError} />
-        {socialError ? (
-          <p role="alert" className="mt-2 text-xs text-destructive">
-            {socialError}
-          </p>
-        ) : null}
+      <div className="mt-8">
+        <GoogleSignInButton returnPath="/" />
       </div>
     </AuthLayout>
   );

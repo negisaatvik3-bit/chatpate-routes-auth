@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as BookingRouteImport } from './routes/booking'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as LoginRouteImport } from './routes/login'
@@ -19,6 +20,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TripDetailRouteImport } from './routes/trip-detail'
 import { Route as TripsRouteImport } from './routes/trips'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminTripsRouteImport } from './routes/admin.trips'
 import { Route as ApiBookingRouteImport } from './routes/api/booking'
@@ -46,6 +48,11 @@ import { Route as ApiTripsTripIdItineraryItineraryIdRouteImport } from './routes
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingRoute = BookingRouteImport.update({
@@ -93,15 +100,20 @@ const TripsRoute = TripsRouteImport.update({
   path: '/trips',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
-  id: '/admin/login',
-  path: '/admin/login',
-  getParentRoute: () => rootRouteImport,
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminTripsRoute = AdminTripsRouteImport.update({
-  id: '/admin/trips',
-  path: '/admin/trips',
-  getParentRoute: () => rootRouteImport,
+  id: '/trips',
+  path: '/trips',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ApiBookingRoute = ApiBookingRouteImport.update({
   id: '/api/booking',
@@ -215,6 +227,7 @@ const ApiTripsTripIdItineraryItineraryIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
@@ -232,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/api/trips': typeof ApiTripsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin/': typeof AdminIndexRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
@@ -266,6 +280,7 @@ export interface FileRoutesByTo {
   '/api/trips': typeof ApiTripsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin': typeof AdminIndexRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
@@ -285,6 +300,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/login': typeof LoginRoute
@@ -302,6 +318,7 @@ export interface FileRoutesById {
   '/api/trips': typeof ApiTripsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/dashboard/bookings': typeof DashboardBookingsRoute
+  '/admin/': typeof AdminIndexRoute
   '/admin/trips/new': typeof AdminTripsNewRoute
   '/api/admin/bookings': typeof ApiAdminBookingsRouteWithChildren
   '/api/admin/enquiries': typeof ApiAdminEnquiriesRoute
@@ -322,6 +339,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/booking'
     | '/contact'
     | '/login'
@@ -339,6 +357,7 @@ export interface FileRouteTypes {
     | '/api/trips'
     | '/auth/callback'
     | '/dashboard/bookings'
+    | '/admin/'
     | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
@@ -373,6 +392,7 @@ export interface FileRouteTypes {
     | '/api/trips'
     | '/auth/callback'
     | '/dashboard/bookings'
+    | '/admin'
     | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
@@ -391,6 +411,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/booking'
     | '/contact'
     | '/login'
@@ -408,6 +429,7 @@ export interface FileRouteTypes {
     | '/api/trips'
     | '/auth/callback'
     | '/dashboard/bookings'
+    | '/admin/'
     | '/admin/trips/new'
     | '/api/admin/bookings'
     | '/api/admin/enquiries'
@@ -427,6 +449,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   BookingRoute: typeof BookingRoute
   ContactRoute: typeof ContactRoute
   LoginRoute: typeof LoginRoute
@@ -436,8 +459,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TripDetailRoute: typeof TripDetailRoute
   TripsRoute: typeof TripsRoute
-  AdminLoginRoute: typeof AdminLoginRoute
-  AdminTripsRoute: typeof AdminTripsRouteWithChildren
   ApiBookingRoute: typeof ApiBookingRoute
   ApiEnquiriesRoute: typeof ApiEnquiriesRoute
   ApiMyBookingsRoute: typeof ApiMyBookingsRoute
@@ -458,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/booking': {
@@ -523,19 +551,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TripsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
-      path: '/admin/login'
+      path: '/login'
       fullPath: '/admin/login'
       preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/trips': {
       id: '/admin/trips'
-      path: '/admin/trips'
+      path: '/trips'
       fullPath: '/admin/trips'
       preLoaderRoute: typeof AdminTripsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/api/booking': {
       id: '/api/booking'
@@ -703,6 +738,20 @@ const AdminTripsRouteWithChildren = AdminTripsRoute._addFileChildren(
   AdminTripsRouteChildren,
 )
 
+interface AdminRouteChildren {
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminTripsRoute: typeof AdminTripsRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminLoginRoute: AdminLoginRoute,
+  AdminTripsRoute: AdminTripsRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface ApiTripsTripIdImagesRouteChildren {
   ApiTripsTripIdImagesImageIdRoute: typeof ApiTripsTripIdImagesImageIdRoute
 }
@@ -780,6 +829,7 @@ const ApiAdminTripsRouteWithChildren = ApiAdminTripsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   BookingRoute: BookingRoute,
   ContactRoute: ContactRoute,
   LoginRoute: LoginRoute,
@@ -789,8 +839,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TripDetailRoute: TripDetailRoute,
   TripsRoute: TripsRoute,
-  AdminLoginRoute: AdminLoginRoute,
-  AdminTripsRoute: AdminTripsRouteWithChildren,
   ApiBookingRoute: ApiBookingRoute,
   ApiEnquiriesRoute: ApiEnquiriesRoute,
   ApiMyBookingsRoute: ApiMyBookingsRoute,

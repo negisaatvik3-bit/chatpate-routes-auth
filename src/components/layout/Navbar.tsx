@@ -198,7 +198,7 @@ export function Navbar({ activePage }: NavbarProps = {}) {
                 aria-controls="desktop-account-menu"
               >
                 <span className="nav-account-indicator" aria-hidden="true" />
-                Signed in
+                {isAdmin ? "Admin" : "Signed in"}
                 <span className="nav-account-chevron" aria-hidden="true">
                   ⌄
                 </span>
@@ -301,7 +301,8 @@ export function Navbar({ activePage }: NavbarProps = {}) {
           ) : (
             <>
               <p className="mobile-account-email">
-                Signed in as <strong>{email}</strong>
+                {isAdmin ? "Admin account" : "Signed in as"}
+                <strong>{email}</strong>
               </p>
               <a href="/dashboard/bookings" onClick={closeMenu}>
                 My Bookings

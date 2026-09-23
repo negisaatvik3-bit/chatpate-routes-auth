@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integerations/supabase/client";
 import { handleLogout } from "@/lib/auth";
@@ -28,9 +28,11 @@ const navItems = [
 
 export function Navbar({ activePage }: NavbarProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [account, setAccount] = useState<AccountState>({ status: "loading" });
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
+  const accountMenuRef = useRef<HTMLLIElement>(null);
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -107,6 +109,26 @@ export function Navbar({ activePage }: NavbarProps = {}) {
     return () => document.body.classList.remove("menu-open");
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsAccountMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isAccountMenuOpen]);
+
   const signOut = async () => {
     setSignOutError("");
     setIsSigningOut(true);
@@ -114,6 +136,7 @@ export function Navbar({ activePage }: NavbarProps = {}) {
     try {
       await handleLogout();
       closeMenu();
+      setIsAccountMenuOpen(false);
     } catch {
       setSignOutError("Could not sign out. Please try again.");
     } finally {
@@ -144,15 +167,8 @@ export function Navbar({ activePage }: NavbarProps = {}) {
               </a>
             </li>
           ))}
-          {account.status === "loading" ? (
-            <li className="nav-account-status" aria-live="polite">
-              Checking account…
-            </li>
-          ) : account.status === "unavailable" ? (
+          {account.status === "unavailable" ? (
             <>
-              <li className="nav-account-status" aria-live="polite">
-                Account status unavailable
-              </li>
               <li>
                 <a href={LOGIN_HREF} className="nav-cta" onClick={closeMenu}>
                   Sign in
@@ -172,35 +188,57 @@ export function Navbar({ activePage }: NavbarProps = {}) {
                 </a>
               </li>
             </>
-          ) : (
-            <>
-              <li className="nav-account-email" title={email}>
-                Signed in as {email}
-              </li>
-              <li>
-                <a href="/dashboard/bookings" onClick={closeMenu}>
+          ) : account.status === "signed-in" ? (
+            <li className="nav-account-menu" ref={accountMenuRef}>
+              <button
+                type="button"
+                className="nav-account-trigger"
+                onClick={() => setIsAccountMenuOpen((open) => !open)}
+                aria-expanded={isAccountMenuOpen}
+                aria-controls="desktop-account-menu"
+              >
+                <span className="nav-account-indicator" aria-hidden="true" />
+                Signed in
+                <span className="nav-account-chevron" aria-hidden="true">
+                  ⌄
+                </span>
+              </button>
+              <div
+                id="desktop-account-menu"
+                className="nav-account-popover"
+                hidden={!isAccountMenuOpen}
+              >
+                <p className="nav-account-popover-email" title={email}>
+                  {email}
+                </p>
+                <a href="/dashboard/bookings" onClick={() => setIsAccountMenuOpen(false)}>
                   My Bookings
                 </a>
-              </li>
-              {isAdmin ? (
-                <li>
-                  <a href="/admin/trips" onClick={closeMenu}>
+                {isAdmin ? (
+                  <a href="/admin/trips" onClick={() => setIsAccountMenuOpen(false)}>
                     Admin
                   </a>
-                </li>
-              ) : null}
-              <li>
-                <button
-                  type="button"
-                  className="nav-sign-out"
-                  onClick={signOut}
-                  disabled={isSigningOut}
-                >
+                ) : account.role === "checking" ? (
+                  <span className="nav-account-popover-status">Checking admin access…</span>
+                ) : null}
+                {account.role === "unavailable" ? (
+                  <span className="nav-account-popover-status">Admin access unavailable</span>
+                ) : null}
+                <button type="button" onClick={signOut} disabled={isSigningOut}>
                   {isSigningOut ? "Signing out…" : "Sign out"}
                 </button>
-              </li>
-            </>
-          )}
+                {signOutError ? (
+                  <p className="nav-account-error" role="alert">
+                    {signOutError}
+                  </p>
+                ) : null}
+              </div>
+            </li>
+          ) : account.status === "loading" ? (
+            <li className="nav-account-status" aria-live="polite">
+              Checking account…
+            </li>
+          ) : null}
         </ul>
 
         <button

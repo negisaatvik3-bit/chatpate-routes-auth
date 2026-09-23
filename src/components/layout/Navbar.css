@@ -50,17 +50,9 @@
   font-weight: 600;
 }
 
-.nav-account-status,
-.nav-account-email {
+.nav-account-status {
   color: rgba(255, 255, 255, 0.82);
   font-size: 13px;
-}
-
-.nav-account-email {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .navbar .nav-links a.nav-sign-in {
@@ -68,19 +60,117 @@
   text-underline-offset: 4px;
 }
 
-.navbar .nav-links .nav-sign-out {
-  padding: 0;
-  border: 0;
-  background: transparent;
+.nav-account-menu {
+  position: relative;
+}
+
+.nav-account-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 24px;
+  background: rgba(15, 29, 34, 0.2);
   color: #fff;
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
 }
 
-.navbar .nav-links .nav-sign-out:disabled {
+.nav-account-trigger:hover,
+.nav-account-trigger[aria-expanded="true"] {
+  background: rgba(15, 29, 34, 0.38);
+}
+
+.nav-account-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a5f2fc;
+  box-shadow: 0 0 0 3px rgba(165, 242, 252, 0.16);
+}
+
+.nav-account-chevron {
+  margin-top: -4px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.nav-account-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 200;
+  display: flex;
+  width: max-content;
+  min-width: 210px;
+  max-width: min(280px, 88vw);
+  flex-direction: column;
+  padding: 9px;
+  border: 1px solid rgba(20, 35, 30, 0.1);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.2);
+  color: #1b2722;
+}
+
+.nav-account-popover[hidden] {
+  display: none;
+}
+
+.nav-account-popover-email {
+  margin: 0 0 5px;
+  padding: 8px 9px 12px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid #e8ece8;
+  color: #59645e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.navbar .nav-links .nav-account-popover a,
+.nav-account-popover button,
+.nav-account-popover-status {
+  display: block;
+  width: 100%;
+  padding: 10px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #1b2722 !important;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: left;
+  text-decoration: none;
+}
+
+.navbar .nav-links .nav-account-popover a:hover,
+.nav-account-popover button:hover {
+  background: #f1f5f1;
+  opacity: 1;
+}
+
+.nav-account-popover button {
+  cursor: pointer;
+}
+
+.nav-account-popover button:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+.nav-account-popover-status {
+  color: #66716b !important;
+  font-size: 12px;
+}
+
+.nav-account-error {
+  margin: 6px 9px 4px;
+  color: #a12424;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .hamburger {
@@ -118,7 +208,10 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(-20px);
-  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease,
+    visibility 0.35s ease;
 }
 
 .mobile-menu.active {
@@ -153,8 +246,12 @@
   background: #fff;
 }
 
-.menu-close span:first-child { transform: rotate(45deg); }
-.menu-close span:last-child { transform: rotate(-45deg); }
+.menu-close span:first-child {
+  transform: rotate(45deg);
+}
+.menu-close span:last-child {
+  transform: rotate(-45deg);
+}
 
 .mobile-menu-links {
   display: flex;
@@ -248,18 +345,18 @@
   font-size: 13px;
 }
 
-body.menu-open { overflow: hidden; }
-
-@media (max-width: 650px) {
-  .navbar { padding: 22px 5%; }
-  .nav-links { display: none; }
-  .hamburger { display: flex; }
+body.menu-open {
+  overflow: hidden;
 }
 
-@media (min-width: 651px) and (max-width: 980px) {
-  .navbar { padding-right: 5%; padding-left: 5%; }
-  .nav-links { gap: 17px; }
-  .nav-account-email { max-width: 130px; }
-  .navbar .nav-links a,
-  .navbar .nav-links .nav-sign-out { font-size: 13px; }
+@media (max-width: 980px) {
+  .navbar {
+    padding: 22px 5%;
+  }
+  .nav-links {
+    display: none;
+  }
+  .hamburger {
+    display: flex;
+  }
 }

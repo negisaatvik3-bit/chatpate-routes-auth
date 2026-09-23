@@ -50,6 +50,39 @@
   font-weight: 600;
 }
 
+.nav-account-status,
+.nav-account-email {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+}
+
+.nav-account-email {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar .nav-links a.nav-sign-in {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.navbar .nav-links .nav-sign-out {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.navbar .nav-links .nav-sign-out:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .hamburger {
   display: none;
   width: 28px;
@@ -79,6 +112,7 @@
   min-height: 100dvh;
   flex-direction: column;
   padding: 25px 6% 35px;
+  overflow-y: auto;
   background: #315c45;
   color: #fff;
   opacity: 0;
@@ -164,10 +198,68 @@
   text-decoration: none;
 }
 
+.mobile-account {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 0 22px;
+  padding: 18px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.mobile-account-email,
+.mobile-account-status {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.mobile-account-email strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-size: 14px;
+}
+
+.mobile-account a,
+.mobile-account button {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mobile-account button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.nav-auth-error {
+  margin: 12px 0 0;
+  color: #ffe0df;
+  font-size: 13px;
+}
+
 body.menu-open { overflow: hidden; }
 
 @media (max-width: 650px) {
   .navbar { padding: 22px 5%; }
   .nav-links { display: none; }
   .hamburger { display: flex; }
+}
+
+@media (min-width: 651px) and (max-width: 980px) {
+  .navbar { padding-right: 5%; padding-left: 5%; }
+  .nav-links { gap: 17px; }
+  .nav-account-email { max-width: 130px; }
+  .navbar .nav-links a,
+  .navbar .nav-links .nav-sign-out { font-size: 13px; }
 }

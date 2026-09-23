@@ -11,6 +11,42 @@
   color: #fff;
 }
 
+.navbar.navbar-light {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: 20;
+  padding: 18px 5%;
+  border-bottom: 1px solid #e2e9e6;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(20, 60, 50, 0.06);
+  color: #173f35;
+}
+
+.navbar.navbar-light .nav-brand {
+  color: #147fac;
+}
+
+.navbar.navbar-light .nav-links a {
+  color: #173f35;
+}
+
+.navbar.navbar-light .nav-links a.nav-cta {
+  background: #157fac;
+  color: #fff !important;
+}
+
+.navbar.navbar-light .nav-account-trigger {
+  border-color: #d8e2de;
+  background: #f8faf9;
+  color: #173f35;
+}
+
+.navbar.navbar-light .nav-account-status {
+  color: #596b63;
+}
+
 .navbar .nav-brand,
 .mobile-menu .mobile-menu-brand {
   color: #a5f2fc;
@@ -352,6 +388,9 @@ body.menu-open {
 @media (max-width: 980px) {
   .navbar {
     padding: 22px 5%;
+  }
+  .navbar.navbar-light {
+    padding: 18px 5%;
   }
   .nav-links {
     display: none;

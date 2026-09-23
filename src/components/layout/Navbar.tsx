@@ -6,6 +6,7 @@ import "./Navbar.css";
 
 type NavbarProps = {
   activePage?: "trips" | "about" | "contact";
+  variant?: "overlay" | "light";
 };
 
 type AccountState =
@@ -26,7 +27,7 @@ const navItems = [
   { href: "/contact", label: "Contact", num: "03", page: "contact" },
 ] as const;
 
-export function Navbar({ activePage }: NavbarProps = {}) {
+export function Navbar({ activePage, variant = "overlay" }: NavbarProps = {}) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [account, setAccount] = useState<AccountState>({ status: "loading" });
@@ -150,7 +151,10 @@ export function Navbar({ activePage }: NavbarProps = {}) {
 
   return (
     <>
-      <nav className="navbar" aria-label="Main navigation">
+      <nav
+        className={`navbar${variant === "light" ? " navbar-light" : ""}`}
+        aria-label="Main navigation"
+      >
         <a href="/" className="nav-brand" onClick={closeMenu}>
           Chatpate Routes
         </a>

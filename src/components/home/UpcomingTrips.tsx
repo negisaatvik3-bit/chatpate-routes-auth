@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import birImage from "@/assets/bir-copy.png";
 import jibhiImage from "@/assets/jibhi.png";
 import rishikeshImage from "@/assets/rishikesh.png";
 import jimImage from "@/assets/jim.png";
 import udaipurImage from "@/assets/udaipur.png";
+import { useCurrentTripDate } from "@/hooks/use-current-trip-date";
+import { isUpcomingTrip } from "@/lib/trip-dates";
 
 type BackendTrip = {
   id: string;
@@ -27,21 +29,12 @@ const fallbackImages: Record<string, string> = {
   Udaipur: udaipurImage,
 };
 
-const fallbackDates: Record<string, string> = {
-  "Bir × Barot Valley 2.0": "4 — 6 Sept",
-  "Ghiyagi × Jibhi": "18 — 20 Sept",
-  Rishikesh: "3 — 5 Oct",
-  "Jim Corbett": "17 — 19 Oct",
-  Udaipur: "31 Oct — 2 Nov",
-};
-
 function formatDateRange(
   startDate: string | null,
   endDate: string | null,
-  title: string,
 ) {
   if (!startDate) {
-    return fallbackDates[title] || "Date TBA";
+    return "Date TBA";
   }
 
   const start = new Date(startDate);
@@ -76,11 +69,19 @@ function formatPrice(price: number | null, title: string) {
 }
 
 export function UpcomingTrips() {
+  const today = useCurrentTripDate();
   const [trips, setTrips] = useState<BackendTrip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [canScrollPrevious, setCanScrollPrevious] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
+  const upcomingTrips = useMemo(
+    () =>
+      trips.filter((trip) =>
+        isUpcomingTrip(trip.start_date, trip.end_date, today),
+      ),
+    [today, trips],
+  );
 
   useEffect(() => {
     const loadTrips = async () => {
@@ -127,7 +128,7 @@ export function UpcomingTrips() {
       slider.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [isLoading, trips, updateScrollState]);
+  }, [isLoading, upcomingTrips, updateScrollState]);
 
   const scrollByCard = (direction: 1 | -1) => {
     const slider = sliderRef.current;
@@ -196,7 +197,7 @@ export function UpcomingTrips() {
 
       <div className="trip-slider" ref={sliderRef}>
         <div className="trip-grid">
-          {trips.map((trip) => {
+          {upcomingTrips.map((trip) => {
             const title = trip.title;
 
             const image =
@@ -207,7 +208,6 @@ export function UpcomingTrips() {
             const date = formatDateRange(
               trip.start_date,
               trip.end_date,
-              title,
             );
 
             const duration = trip.duration_days
@@ -275,6 +275,11 @@ export function UpcomingTrips() {
             );
           })}
         </div>
+        {upcomingTrips.length === 0 ? (
+          <p className="trip-slider-empty">
+            No upcoming trips right now. Check back soon.
+          </p>
+        ) : null}
       </div>
     </section>
 

@@ -5,8 +5,10 @@ import tripHero from "@/assets/trip.png";
 import { TripsNav } from "./TripsNav";
 import "./trips.css";
 import { Link } from "@tanstack/react-router";
+import { useCurrentTripDate } from "@/hooks/use-current-trip-date";
+import { isPastTrip, isUpcomingTrip } from "@/lib/trip-dates";
 
-type Filter = "all" | "upcoming" | "weekend" | "backpacking" | "popular";
+type Filter = "all" | "upcoming" | "past" | "weekend" | "backpacking" | "popular";
 type Month = "all" | "september" | "october" | "november" | "december";
 
 type BackendTrip = {
@@ -119,12 +121,7 @@ function backendTripToTrip(trip: BackendTrip): Trip {
       : "",
     image: trip.cover_image_url || tripHero,
     alt: trip.title,
-    categories: [
-      "upcoming",
-      ...(trip.trip_type
-        ? [trip.trip_type.toLowerCase()]
-        : []),
-    ],
+    categories: trip.trip_type ? [trip.trip_type.toLowerCase()] : [],
     search: `${trip.title} ${trip.destination || ""} ${
       trip.trip_type || ""
     }`.toLowerCase(),
@@ -137,6 +134,7 @@ function backendTripToTrip(trip: BackendTrip): Trip {
 const filterOptions: { value: Filter; label: string }[] = [
   { value: "all", label: "All Trips" },
   { value: "upcoming", label: "Upcoming" },
+  { value: "past", label: "Past Trips" },
   { value: "weekend", label: "Weekend" },
   { value: "backpacking", label: "Backpacking" },
   { value: "popular", label: "Popular" },
@@ -190,6 +188,7 @@ function TripCard({ trip, index }: { trip: Trip; index: number }) {
 }
 
 export function TripsPage() {
+  const today = useCurrentTripDate();
     const { month: urlMonth, date: urlDate } = useSearch({from: "/trips",});
     const [selectedDate, setSelectedDate] = useState(urlDate);
     const [search, setSearch] = useState("");
@@ -274,7 +273,13 @@ export function TripsPage() {
 
   return trips.filter((trip) => {
     const matchesFilter =
-      filter === "all" || trip.categories.includes(filter);
+      filter === "all"
+        ? true
+        : filter === "upcoming"
+          ? isUpcomingTrip(trip.startDate, trip.endDate, today)
+          : filter === "past"
+            ? isPastTrip(trip.endDate, today)
+            : trip.categories.includes(filter);
 
     const matchesMonth =
       month === "all" || trip.month === month;
@@ -292,7 +297,7 @@ export function TripsPage() {
       matchesDate
     );
   });
-}, [trips, search, filter, month, selectedDate]);
+}, [trips, search, filter, month, selectedDate, today]);
 
   const clearFilters = () => {
   setSearch("");
@@ -402,7 +407,13 @@ export function TripsPage() {
 
           {!isLoading && !error && visibleTrips.length === 0 && (
             <div className="trips-empty-state">
-              <h3>No trips found.</h3>
+              <h3>
+                {filter === "upcoming"
+                  ? "No upcoming trips found."
+                  : filter === "past"
+                    ? "No past trips found."
+                    : "No trips found."}
+              </h3>
               <p>Try another destination or clear your filters.</p>
               <button type="button" onClick={clearFilters}>Clear Filters</button>
             </div>

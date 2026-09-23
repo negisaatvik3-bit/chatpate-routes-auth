@@ -741,6 +741,15 @@ body.menu-open {
   display: none;
 }
 
+.trip-slider-empty {
+  margin: 0;
+  padding: 42px 24px;
+  border: 1px dashed rgba(49, 92, 69, 0.24);
+  border-radius: 15px;
+  color: #557064;
+  text-align: center;
+}
+
 /* =========================
    MOVING TRACK
 ========================= */

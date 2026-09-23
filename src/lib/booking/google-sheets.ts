@@ -157,7 +157,7 @@ export async function appendBookingToSheet(booking: BookingData): Promise<boolea
 
       await sheetsRequest(
         accessToken,
-        `${rangeUrl(spreadsheetId, sheetRange)}?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+        `${rangeUrl(spreadsheetId, sheetRange)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
         {
           method: "POST",
           body: JSON.stringify({

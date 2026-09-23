@@ -284,49 +284,44 @@ export function Navbar({ activePage }: NavbarProps = {}) {
           ))}
         </div>
 
-        <div className="mobile-account" aria-live="polite">
-          {account.status === "loading" ? (
-            <p className="mobile-account-status">Checking account…</p>
-          ) : account.status === "unavailable" ? (
-            <>
+        {account.status !== "signed-out" ? (
+          <div className="mobile-account" aria-live="polite">
+            {account.status === "loading" ? (
+              <p className="mobile-account-status">Checking account…</p>
+            ) : account.status === "unavailable" ? (
               <p className="mobile-account-status">Account status unavailable</p>
-              <a href={LOGIN_HREF} onClick={closeMenu}>
-                Sign in
-              </a>
-            </>
-          ) : account.status === "signed-out" ? (
-            <a href={LOGIN_HREF} onClick={closeMenu}>
-              Sign in with Google
-            </a>
-          ) : (
-            <>
-              <p className="mobile-account-email">
-                {isAdmin ? "Admin account" : "Signed in as"}
-                <strong>{email}</strong>
-              </p>
-              <a href="/dashboard/bookings" onClick={closeMenu}>
-                My Bookings
-              </a>
-              {isAdmin ? (
-                <a href="/admin/trips" onClick={closeMenu}>
-                  Admin
+            ) : (
+              <>
+                <p className="mobile-account-email">
+                  {isAdmin ? "Admin account" : "Signed in as"}
+                  <strong>{email}</strong>
+                </p>
+                <a href="/dashboard/bookings" onClick={closeMenu}>
+                  My Bookings
                 </a>
-              ) : account.role === "checking" ? (
-                <span className="mobile-account-status">Checking admin access…</span>
-              ) : null}
-              <button type="button" onClick={signOut} disabled={isSigningOut}>
-                {isSigningOut ? "Signing out…" : "Sign out"}
-              </button>
-            </>
-          )}
-        </div>
+                {isAdmin ? (
+                  <a href="/admin/trips" onClick={closeMenu}>
+                    Admin
+                  </a>
+                ) : account.role === "checking" ? (
+                  <span className="mobile-account-status">
+                    Checking admin access…
+                  </span>
+                ) : null}
+                <button type="button" onClick={signOut} disabled={isSigningOut}>
+                  {isSigningOut ? "Signing out…" : "Sign out"}
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
 
         <a
           href={isSignedIn ? "/trips" : LOGIN_HREF}
           className="mobile-menu-cta"
           onClick={closeMenu}
         >
-          {isSignedIn ? "BROWSE TRIPS" : "FIND MY TRIP"}
+          {isSignedIn ? "BROWSE TRIPS" : "Login"}
         </a>
         {signOutError ? (
           <p className="nav-auth-error" role="alert">

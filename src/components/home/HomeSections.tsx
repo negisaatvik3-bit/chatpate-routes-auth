@@ -22,7 +22,6 @@ export function HeroSection({
   ) => void;
 }) {
   const [destination, setDestination] = useState("");
-  const [travelDate, setTravelDate] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
   const [selectedTrip, setSelectedTrip] = useState<BackendTrip | null>(null);
@@ -116,7 +115,7 @@ export function HeroSection({
       return;
     }
 
-    onFindTrip(trimmedDestination, travelDate, selectedTrip ?? undefined);
+    onFindTrip(trimmedDestination, "", selectedTrip ?? undefined);
   };
 
   return (
@@ -212,32 +211,6 @@ export function HeroSection({
                 )}
               </div>
             ) : null}
-          </div>
-
-          <div className="search-divider" />
-
-          <div
-            className="search-field date-field"
-            onClick={() => {
-              const el = document.getElementById("dateInput") as
-                | (HTMLInputElement & { showPicker?: () => void })
-                | null;
-
-              if (el?.showPicker) {
-                el.showPicker();
-              } else {
-                el?.focus();
-              }
-            }}
-          >
-            <label htmlFor="dateInput">When</label>
-
-            <input
-              type="date"
-              id="dateInput"
-              value={travelDate}
-              onChange={(event) => setTravelDate(event.target.value)}
-            />
           </div>
 
           <button
